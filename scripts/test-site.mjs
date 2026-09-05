@@ -13,6 +13,8 @@ import { join } from "node:path";
 const websiteRoot = join(process.cwd(), "website");
 const pagePath = join(websiteRoot, "index.html");
 const page = readFileSync(pagePath, "utf8");
+const readmePath = join(process.cwd(), "README.md");
+const readme = readFileSync(readmePath, "utf8");
 
 /**
  * Ensures a website asset used by the landing page is committed beside it.
@@ -35,6 +37,13 @@ assert.match(page, /edge-tabs-full\.png/, "page must use the full-frame resting 
 assert.match(page, /open-note-full\.png/, "page must use the full-frame open note capture");
 assert.match(page, /noty-workflow-full\.(gif|mp4)/, "page must publish the uncropped workflow media");
 assert.doesNotMatch(page, /object-fit/, "the product captures must not be cropped by CSS");
+
+assert.match(readme, /guide\.en\.md[\s\S]*guide\.ru\.md[\s\S]*guide\.es\.md[\s\S]*guide\.de\.md[\s\S]*guide\.fr\.md/, "README must expose the language switcher");
+const readmeGifPosition = readme.indexOf("website/assets/demo/noty-workflow-full.gif");
+const readmeRestPosition = readme.indexOf("website/assets/screenshots/edge-tabs-full.png");
+const readmeOpenPosition = readme.indexOf("website/assets/screenshots/open-note-full.png");
+assert.ok(readmeGifPosition >= 0 && readmeGifPosition < readmeRestPosition && readmeRestPosition < readmeOpenPosition, "README must place the animated capture before the two screenshots");
+assert.match(readme, /edge-tabs-full\.png[\s\S]*width="48%"[\s\S]*open-note-full\.png[\s\S]*width="48%"/, "README screenshots must keep their aspect ratio in a two-up row");
 
 for (const asset of [
     "assets/noty-linux.svg",

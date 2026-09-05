@@ -7,6 +7,25 @@ without taking over the screen. The Plasma widget sleeps as a small edge
 indicator, fans into coloured tabs when you reach it, and opens a note without
 scattering windows over the desktop.
 
+<p align="center">
+  <a href="docs/website/guide.en.md">English</a> ·
+  <a href="docs/website/guide.ru.md">Русский</a> ·
+  <a href="docs/website/guide.es.md">Español</a> ·
+  <a href="docs/website/guide.de.md">Deutsch</a> ·
+  <a href="docs/website/guide.fr.md">Français</a>
+</p>
+
+<p align="center">
+  <img src="website/assets/demo/noty-workflow-full.gif" alt="Real KDE Plasma capture: the Noty Linux deck opens, a note is edited and recoloured, then returns to the edge" width="790">
+</p>
+
+<p align="center">
+  <img src="website/assets/screenshots/edge-tabs-full.png" alt="Real KDE Plasma screenshot of the coloured Noty Linux tabs resting at the screen edge" width="48%">
+  <img src="website/assets/screenshots/open-note-full.png" alt="Real KDE Plasma screenshot of an open Noty Linux note with the edge tabs still visible" width="48%">
+</p>
+
+<p align="center"><sub>Real, uncropped KDE Plasma captures · <a href="website/assets/screenshots/edge-tabs-full.png">resting deck</a> · <a href="website/assets/screenshots/open-note-full.png">open note</a></sub></p>
+
 ## What it does
 
 - A compact edge indicator, fanned tabs and an open note card.
