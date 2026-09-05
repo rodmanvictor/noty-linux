@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Noty Linux keeps local notes at the edge of your desktop. The first shipping integration is a KDE Plasma 6 widget.">
+  <meta name="description" content="Noty Linux keeps local notes at the edge of your desktop. KDE Plasma 6 is available today.">
   <meta name="theme-color" content="#171925">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Noty Linux — local notes at the edge of work">
@@ -33,6 +33,13 @@
     .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); font-size: 1rem; font-weight: 850; letter-spacing: -.025em; text-decoration: none; }
     .brand img { width: 32px; height: 32px; }
     .brand span { color: var(--muted); font-size: .79rem; font-weight: 700; letter-spacing: .01em; }
+    .topbar-end { display: flex; align-items: center; gap: 20px; }
+    .signals { display: flex; align-items: center; gap: 14px; color: var(--muted); }
+    .signal { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-size: .74rem; font-weight: 800; letter-spacing: .015em; }
+    .signal svg { width: 16px; height: 16px; fill: currentColor; }
+    .signal:nth-child(1) { color: var(--sun); }
+    .signal:nth-child(2) { color: var(--note); }
+    .signal:nth-child(3) { color: var(--focus); }
     .nav { display: flex; align-items: center; gap: 4px; }
     .nav a, .motion-toggle { border: 0; border-radius: 7px; padding: 8px 10px; background: transparent; color: var(--muted); cursor: pointer; font: 700 .84rem/1 var(--sans); text-decoration: none; transition: color .16s ease, background .16s ease; }
     .nav a:hover, .motion-toggle:hover { background: rgba(247,242,231,.08); color: var(--ink); }
@@ -53,8 +60,8 @@
     .button.secondary:hover { background: rgba(247,242,231,.08); }
     .quiet { margin: 0; color: var(--muted); font-size: .82rem; }
 
-    .capture { overflow: hidden; border: 1px solid rgba(255,255,255,.22); border-radius: var(--radius); background: #a895ce; box-shadow: var(--shadow); }
-    .capture video, .capture img { display: block; width: 100%; height: auto; background: #a895ce; }
+    .capture { border: 1px solid rgba(255,255,255,.22); border-radius: var(--radius); background: #a895ce; box-shadow: var(--shadow); }
+    .capture video, .capture img { display: block; width: 100%; height: auto; border-radius: calc(var(--radius) - 1px); background: #a895ce; }
     .capture-meta { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 15px; background: var(--night-raised); color: var(--muted); font-size: .79rem; }
     .capture-meta span { display: inline-flex; align-items: center; gap: 8px; }
     .capture-meta span::before { width: 7px; height: 7px; border-radius: 50%; background: var(--note); content: ""; }
@@ -65,17 +72,17 @@
     .section-copy p { max-width: 58ch; color: var(--muted); font-size: 1.05rem; }
     .workflow { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(270px,.9fr); align-items: center; gap: clamp(26px,5vw,74px); }
     .workflow-visual { position: relative; }
-    .workflow-visual img { display: block; width: 100%; border-radius: var(--radius); box-shadow: var(--shadow); }
+    .workflow-visual img { display: block; width: 100%; height: auto; border-radius: var(--radius); box-shadow: var(--shadow); }
     .workflow-copy { max-width: 38ch; }
     .workflow-copy p { color: var(--muted); }
     .inline-link { color: var(--ink); font-weight: 750; text-decoration-color: var(--sun); text-decoration-thickness: 2px; text-underline-offset: 4px; }
 
-    .screenshot-grid { display: grid; grid-template-columns: 1.32fr .68fr; gap: clamp(18px,3vw,36px); align-items: end; }
+    .screenshot-grid { display: grid; grid-template-columns: 1.08fr .92fr; gap: clamp(18px,3vw,36px); align-items: start; }
     figure { margin: 0; }
-    .screenshot { overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: #a895ce; box-shadow: var(--shadow); }
-    .screenshot img { display: block; width: 100%; height: auto; }
+    .screenshot { border: 1px solid var(--line); border-radius: var(--radius); background: #a895ce; box-shadow: var(--shadow); }
+    .screenshot img { display: block; width: 100%; height: auto; border-radius: calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0; }
     .screenshot figcaption { padding: 13px 15px 15px; background: var(--night-raised); color: var(--muted); font-size: .82rem; }
-    .screenshot-small { margin-bottom: 42px; }
+    .full-shot { display: inline-block; margin-top: 7px; color: var(--ink); font-weight: 750; font-size: .78rem; text-decoration-color: var(--sun); text-decoration-thickness: 2px; text-underline-offset: 4px; }
     .feature-list { margin: clamp(55px,8vw,112px) 0 0; border-top: 1px solid var(--line); }
     .feature-list > div { display: grid; grid-template-columns: minmax(150px,.34fr) minmax(0,1fr); gap: 18px; padding: 20px 0; border-bottom: 1px solid var(--line); }
     .feature-list dt { color: var(--sun); font-size: .86rem; font-weight: 850; letter-spacing: .025em; }
@@ -86,15 +93,22 @@
     pre { margin: 0; padding: clamp(22px,3.2vw,34px); overflow: auto; border: 1px solid rgba(245,212,109,.48); border-radius: var(--radius); background: #0f1018; color: #f7f2e7; box-shadow: var(--shadow); font: .91rem/1.8 ui-monospace, SFMono-Regular, Menlo, monospace; }
     .prompt { color: var(--sun); user-select: none; }
     .install-note { margin-top: 15px; color: var(--muted); font-size: .83rem; }
-    .credit { padding-bottom: clamp(76px,10vw,132px) !important; }
-    .credit-copy { max-width: 730px; }
-    .credit-copy p { color: var(--muted); font-size: 1.03rem; }
-    .credit-copy a { color: var(--ink); font-weight: 750; text-decoration-color: var(--pink); text-decoration-thickness: 2px; text-underline-offset: 4px; }
+    .documentation { padding-bottom: clamp(76px,10vw,132px) !important; }
+    .documentation-copy { max-width: 730px; }
+    .documentation-copy > p { color: var(--muted); font-size: 1.03rem; }
+    .language-list { margin: 32px 0 0; padding: 0; border-top: 1px solid var(--line); list-style: none; }
+    .language-list li { border-bottom: 1px solid var(--line); }
+    .language-list a { display: grid; grid-template-columns: minmax(96px,.23fr) minmax(0,1fr) 18px; gap: 16px; align-items: center; padding: 17px 0; color: var(--ink); text-decoration: none; }
+    .language-list a:hover { color: var(--sun); }
+    .language-list strong { font-size: .9rem; }
+    .language-list span { color: var(--muted); font-size: .92rem; }
+    .language-list svg { width: 16px; height: 16px; fill: currentColor; }
     footer { display: flex; justify-content: space-between; gap: 22px; padding: 27px 0 38px; border-top: 1px solid var(--line-quiet); color: var(--muted); font-size: .8rem; }
     footer p { margin: 0; }
 
-    @media (max-width: 900px) { .hero, .workflow, .screenshot-grid, .install { grid-template-columns: 1fr; } .hero { min-height: auto; } .capture { max-width: 720px; } .screenshot-small { max-width: 500px; margin: 0; } }
-    @media (max-width: 620px) { :root { --shell: min(100% - 30px,1180px); } .topbar { min-height: 68px; } .brand span, .nav a:not(:last-child) { display: none; } h1 { font-size: clamp(3.15rem,16vw,4.75rem); } .hero { padding: 40px 0 74px; } .hero .capture { order: -1; } .capture-meta { align-items: flex-start; flex-direction: column; } .feature-list > div { grid-template-columns: 1fr; gap: 5px; } pre { font-size: .77rem; } footer { display: block; } footer p + p { margin-top: 8px; } }
+    @media (max-width: 900px) { .hero, .workflow, .screenshot-grid, .install { grid-template-columns: 1fr; } .hero { min-height: auto; } .capture { max-width: 790px; } }
+    @media (max-width: 760px) { .signals { gap: 9px; } .signal b { display: none; } }
+    @media (max-width: 620px) { :root { --shell: min(100% - 30px,1180px); } .topbar { min-height: 68px; } .brand span, .signals, .nav a:not(:last-child) { display: none; } h1 { font-size: clamp(3.15rem,16vw,4.75rem); } .hero { padding: 40px 0 74px; } .hero .capture { order: -1; } .capture-meta { align-items: flex-start; flex-direction: column; } .feature-list > div { grid-template-columns: 1fr; gap: 5px; } .language-list a { grid-template-columns: 1fr 18px; gap: 6px; } .language-list span { grid-column: 1; } .language-list svg { grid-column: 2; grid-row: 1 / span 2; } pre { font-size: .77rem; } footer { display: block; } footer p + p { margin-top: 8px; } }
     @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .button { transition: none; } }
   </style>
 </head>
@@ -103,7 +117,14 @@
   <div class="shell">
     <header class="topbar" id="top">
       <a class="brand" href="#top" aria-label="Noty Linux home"><img src="assets/noty-linux.svg" alt=""><span>Noty Linux</span></a>
-      <nav class="nav" aria-label="Site navigation"><a href="#see-it">See it live</a><a href="#install">Install</a><a href="https://github.com/rodmanvictor/noty-linux">GitHub</a></nav>
+      <div class="topbar-end">
+        <div class="signals" aria-label="KDE Plasma 6, local-first, MIT licensed">
+          <span class="signal" title="KDE Plasma 6"><svg viewBox="0 0 256 256" aria-hidden="true"><path d="M208,40H48A24,24,0,0,0,24,64V176a24,24,0,0,0,24,24h72v16H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16H136V200h72a24,24,0,0,0,24-24V64A24,24,0,0,0,208,40ZM48,56H208a8,8,0,0,1,8,8v80H40V64A8,8,0,0,1,48,56ZM208,184H48a8,8,0,0,1-8-8V160H216v16A8,8,0,0,1,208,184Z"/></svg><b>Plasma 6</b></span>
+          <span class="signal" title="Local-first"><svg viewBox="0 0 256 256" aria-hidden="true"><path d="M208,136H48a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V152A16,16,0,0,0,208,136Zm0,64H48V152H208v48Zm0-160H48A16,16,0,0,0,32,56v48a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V56A16,16,0,0,0,208,40Zm0,64H48V56H208v48ZM192,80a12,12,0,1,1-12-12A12,12,0,0,1,192,80Zm0,96a12,12,0,1,1-12-12A12,12,0,0,1,192,176Z"/></svg><b>Local-first</b></span>
+          <span class="signal" title="MIT licensed"><svg viewBox="0 0 256 256" aria-hidden="true"><path d="M208,40H48A16,16,0,0,0,32,56v56c0,52.72,25.52,84.67,46.93,102.19,23.06,18.86,46,25.26,47,25.53a8,8,0,0,0,4.2,0c1-.27,23.91-6.67,47-25.53C198.48,196.67,224,164.72,224,112V56A16,16,0,0,0,208,40Zm0,72c0,37.07-13.66,67.16-40.6,89.42A129.3,129.3,0,0,1,128,223.62a128.25,128.25,0,0,1-38.92-21.81C61.82,179.51,48,149.3,48,112l0-56,160,0ZM82.34,141.66a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32l-56,56a8,8,0,0,1-11.32,0Z"/></svg><b>MIT</b></span>
+        </div>
+        <nav class="nav" aria-label="Site navigation"><a href="#see-it">See it live</a><a href="#docs">Docs</a><a href="#install">Install</a><a href="https://github.com/rodmanvictor/noty-linux">GitHub</a></nav>
+      </div>
     </header>
     <main id="main">
       <section class="hero" aria-labelledby="hero-title">
@@ -114,27 +135,27 @@
           <p class="quiet">Other Linux desktops are a future direction, not a promise for this release.</p>
         </div>
         <figure class="capture">
-          <video id="workflow-video" autoplay muted loop playsinline poster="assets/screenshots/live-note-editor.png" aria-label="A real desktop capture of Noty Linux being used"><source src="assets/demo/noty-workflow.mp4" type="video/mp4"><img src="assets/demo/noty-workflow.gif" alt="A Noty Linux note opens, is edited, changes colour, then returns to its edge tab."></video>
-          <figcaption class="capture-meta"><span>Real KDE Plasma desktop capture · 13 seconds</span><button class="motion-toggle" type="button" data-motion-toggle aria-pressed="false">Pause motion</button></figcaption>
+          <video id="workflow-video" autoplay muted loop playsinline poster="assets/screenshots/open-note-full.png" aria-label="A real desktop capture of Noty Linux being used"><source src="assets/demo/noty-workflow-full.mp4" type="video/mp4"><img src="assets/demo/noty-workflow-full.gif" alt="A real Noty Linux edge deck opens, a note is edited and recoloured, then the note returns to its tabs."></video>
+          <figcaption class="capture-meta"><span>Real KDE Plasma desktop capture · full frame</span><button class="motion-toggle" type="button" data-motion-toggle aria-pressed="false">Pause motion</button></figcaption>
         </figure>
       </section>
       <section id="see-it" aria-labelledby="workflow-title">
         <div class="section-copy"><h2 id="workflow-title">A small interaction, shown without a mockup.</h2><p>This is the same running widget: the tab deck opens, a note is edited, its paper colour changes, and the desktop becomes quiet again.</p></div>
         <div class="workflow">
-          <figure class="workflow-visual"><img src="assets/screenshots/live-note-colour.png" alt="The real Noty Linux note after its paper colour changes from green to blue."></figure>
-          <div class="workflow-copy"><h3>Use the full sequence anywhere.</h3><p>The MP4 keeps the capture compact on this page. The matching GIF is available for places that do not autoplay video, such as a README or community post.</p><p><a class="inline-link" href="assets/demo/noty-workflow.gif" download>Download the GIF</a> · <a class="inline-link" href="assets/demo/noty-workflow.mp4" download>Download the MP4</a></p></div>
+          <figure class="workflow-visual"><img src="assets/screenshots/colour-change-full.png" alt="A full real frame from Noty Linux after the note paper colour changes, with the deck still visible at the right edge."></figure>
+          <div class="workflow-copy"><h3>Use the full sequence anywhere.</h3><p>The page keeps the source frame intact: the card and the tabs at the right edge are both visible. The matching GIF is ready for a README or community post.</p><p><a class="inline-link" href="assets/demo/noty-workflow-full.gif" download>Download the GIF</a> · <a class="inline-link" href="assets/demo/noty-workflow-full.mp4" download>Download the MP4</a></p></div>
         </div>
       </section>
       <section aria-labelledby="states-title">
         <div class="section-copy"><h2 id="states-title">One note, two distances.</h2><p>Tabs keep several notes reachable without a pile of windows. Opening one gives it the space to write, format, recolour, archive, or simply close it again.</p></div>
         <div class="screenshot-grid">
-          <figure class="screenshot"><img src="assets/screenshots/live-note-editor.png" alt="An open green Noty Linux note with editable text and colour controls."><figcaption>The card is a real crop from the live Plasma interaction capture.</figcaption></figure>
-          <figure class="screenshot screenshot-small"><img src="assets/screenshots/live-note-colour.png" alt="The same real Noty Linux note after changing the paper colour to blue."><figcaption>The same note keeps its content while its paper colour changes.</figcaption></figure>
+          <figure class="screenshot"><img src="assets/screenshots/edge-tabs-full.png" alt="A full real desktop screenshot with a stack of coloured Noty Linux tabs visible at the right screen edge."><figcaption>Resting state: every tab stays visible at the edge.<br><a class="full-shot" href="assets/screenshots/edge-tabs-full.png" target="_blank" rel="noopener">Open full-size image</a></figcaption></figure>
+          <figure class="screenshot"><img src="assets/screenshots/open-note-full.png" alt="A full real desktop screenshot of an open green Noty Linux note with the remaining tabs visible to its right."><figcaption>Open state: the card keeps the deck visible for switching.<br><a class="full-shot" href="assets/screenshots/open-note-full.png" target="_blank" rel="noopener">Open full-size image</a></figcaption></figure>
         </div>
         <dl class="feature-list">
           <div><dt>Keep it local</dt><dd>Notes and archive recovery stay on the machine. Retention is configurable, and removing a palette colour safely falls back to the first colour.</dd></div>
           <div><dt>Make it yours</dt><dd>Choose colours, reorder the palette, use optional ruled paper, adjust typography, and switch among Noty, Adaptive, and Plasma appearance modes.</dd></div>
-          <div><dt>Stay out of the way</dt><dd>Spread the tabs across the available edge, then open only the note you need. The interface is translated into ten languages, including English, Spanish, German, French, Portuguese, Chinese, Japanese, Hindi, Indonesian, and Russian.</dd></div>
+          <div><dt>Stay out of the way</dt><dd>Spread the tabs across the available edge, then open only the note you need. The interface is translated into ten languages and uses one compact Phosphor Regular icon system throughout.</dd></div>
         </dl>
       </section>
       <section id="install" class="install" aria-labelledby="install-title">
@@ -143,11 +164,19 @@
 <span class="prompt">$</span> cd noty-linux
 <span class="prompt">$</span> kpackagetool6 --type Plasma/Applet --upgrade plasmoid/package</code></pre><p class="install-note">Requires KDE Plasma 6 and the standard Plasma package tool.</p></div>
       </section>
-      <section class="credit" aria-labelledby="credit-title">
-        <div class="credit-copy"><h2 id="credit-title">Independent by design.</h2><p>Noty Linux is a new Qt/QML and C++ implementation for Linux desktops. The interaction idea, early visual references, and name were inspired by <a href="https://github.com/aimen08/noty">Noty for macOS by Aymen Hamza</a>. No Swift, SwiftUI, or AppKit source has been copied, and this project is not an official upstream fork or endorsement.</p><p>The bundled interface icons use <a href="https://phosphoricons.com/">Phosphor Icons</a> in the Regular weight. Both the project and its icon attribution are documented in the repository.</p></div>
+      <section id="docs" class="documentation" aria-labelledby="docs-title">
+        <div class="documentation-copy"><h2 id="docs-title">Read the guide in your language.</h2><p>Every guide covers installation, current Plasma 6 limits, local data, and the same verification commands. The widget interface itself is available in ten languages.</p>
+          <ul class="language-list">
+            <li><a href="https://github.com/rodmanvictor/noty-linux/blob/main/docs/website/guide.en.md"><strong>English</strong><span>Install and verify Noty Linux for KDE Plasma 6.</span><svg viewBox="0 0 256 256" aria-hidden="true"><path d="M200,136H83.31l50.35-50.34a8,8,0,0,0-11.32-11.32l-64,64a8,8,0,0,0,0,11.32l64,64a8,8,0,0,0,11.32-11.32L83.31,152H200a8,8,0,0,0,0-16Z"/></svg></a></li>
+            <li><a href="https://github.com/rodmanvictor/noty-linux/blob/main/docs/website/guide.ru.md"><strong>Русский</strong><span>Установка и проверка виджета для KDE Plasma 6.</span><svg viewBox="0 0 256 256" aria-hidden="true"><path d="M200,136H83.31l50.35-50.34a8,8,0,0,0-11.32-11.32l-64,64a8,8,0,0,0,0,11.32l64,64a8,8,0,0,0,11.32-11.32L83.31,152H200a8,8,0,0,0,0-16Z"/></svg></a></li>
+            <li><a href="https://github.com/rodmanvictor/noty-linux/blob/main/docs/website/guide.es.md"><strong>Español</strong><span>Instalación, límites y comprobaciones de Plasma 6.</span><svg viewBox="0 0 256 256" aria-hidden="true"><path d="M200,136H83.31l50.35-50.34a8,8,0,0,0-11.32-11.32l-64,64a8,8,0,0,0,0,11.32l64,64a8,8,0,0,0,11.32-11.32L83.31,152H200a8,8,0,0,0,0-16Z"/></svg></a></li>
+            <li><a href="https://github.com/rodmanvictor/noty-linux/blob/main/docs/website/guide.de.md"><strong>Deutsch</strong><span>Installation, Grenzen und Prüfungen für Plasma 6.</span><svg viewBox="0 0 256 256" aria-hidden="true"><path d="M200,136H83.31l50.35-50.34a8,8,0,0,0-11.32-11.32l-64,64a8,8,0,0,0,0,11.32l64,64a8,8,0,0,0,11.32-11.32L83.31,152H200a8,8,0,0,0,0-16Z"/></svg></a></li>
+            <li><a href="https://github.com/rodmanvictor/noty-linux/blob/main/docs/website/guide.fr.md"><strong>Français</strong><span>Installation, limites et vérifications pour Plasma 6.</span><svg viewBox="0 0 256 256" aria-hidden="true"><path d="M200,136H83.31l50.35-50.34a8,8,0,0,0-11.32-11.32l-64,64a8,8,0,0,0,0,11.32l64,64a8,8,0,0,0,11.32-11.32L83.31,152H200a8,8,0,0,0,0-16Z"/></svg></a></li>
+          </ul>
+        </div>
       </section>
     </main>
-    <footer><p>Noty Linux · MIT licensed · local-first by default</p><p><a href="https://github.com/rodmanvictor/noty-linux">GitHub</a> · <a href="https://github.com/rodmanvictor/noty-linux/blob/main/NOTICE">Attribution</a></p></footer>
+    <footer><p>Noty Linux · MIT licensed · local-first by default</p><p><a href="https://github.com/rodmanvictor/noty-linux">GitHub</a> · <a href="#docs">Documentation</a></p></footer>
   </div>
   <script>
     /** Lets visitors stop the real-screen capture and honours reduced motion. */

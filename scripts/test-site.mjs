@@ -25,20 +25,24 @@ function requireAsset(relativePath) {
 }
 
 assert.match(page, /<title>Noty Linux — local notes at the edge of work<\/title>/, "page title must identify the independent Linux project");
-assert.match(page, /Independent by design\./, "page must credit the design source honestly");
-assert.match(page, /github\.com\/aimen08\/noty/, "page must link to the original Noty project");
 assert.match(page, /github\.com\/rodmanvictor\/noty-linux/, "page must expose the independent source repository");
-assert.match(page, /Phosphor Icons/i, "page must identify its bundled icon source");
+assert.match(page, /Phosphor Regular/i, "page must identify its bundled icon source");
 assert.match(page, /kpackagetool6/, "page must show the Plasma installation command");
 assert.match(page, /Real KDE Plasma desktop capture/, "page must label the real product capture");
-assert.doesNotMatch(page, /noty-sepia\.vercel\.app|Download for macOS|SwiftUI and AppKit/, "macOS site copy must not leak into the KDE landing page");
+assert.match(page, /Read the guide in your language\./, "page must expose the multilingual public documentation");
+assert.match(page, /guide\.(en|ru|es|de|fr)\.md/, "page must link to every public guide language");
+assert.match(page, /edge-tabs-full\.png/, "page must use the full-frame resting deck capture");
+assert.match(page, /open-note-full\.png/, "page must use the full-frame open note capture");
+assert.match(page, /noty-workflow-full\.(gif|mp4)/, "page must publish the uncropped workflow media");
+assert.doesNotMatch(page, /object-fit/, "the product captures must not be cropped by CSS");
 
 for (const asset of [
     "assets/noty-linux.svg",
-    "assets/screenshots/live-note-editor.png",
-    "assets/screenshots/live-note-colour.png",
-    "assets/demo/noty-workflow.mp4",
-    "assets/demo/noty-workflow.gif",
+    "assets/screenshots/edge-tabs-full.png",
+    "assets/screenshots/open-note-full.png",
+    "assets/screenshots/colour-change-full.png",
+    "assets/demo/noty-workflow-full.mp4",
+    "assets/demo/noty-workflow-full.gif",
     "assets/fonts/NotoSerif-Regular.ttf",
     "assets/fonts/NotoSerif-Bold.ttf",
     "robots.txt",

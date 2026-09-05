@@ -7,10 +7,6 @@ without taking over the screen. The Plasma widget sleeps as a small edge
 indicator, fans into coloured tabs when you reach it, and opens a note without
 scattering windows over the desktop.
 
-> Independent Linux desktop implementation inspired by
-> [Noty for macOS](https://github.com/aimen08/noty) by Aymen Hamza.
-> It is not affiliated with or endorsed by the original project.
-
 ## What it does
 
 - A compact edge indicator, fanned tabs and an open note card.
@@ -59,5 +55,5 @@ cmake --build build --parallel
 cmake --install build
 ```
 
-See [the documentation](docs/index.md) for architecture, visual checks and
-the project provenance. Contributions are welcome under the MIT license.
+See [the documentation](docs/index.md) for architecture, visual checks, public
+guides and licensing. Contributions are welcome under the MIT license.

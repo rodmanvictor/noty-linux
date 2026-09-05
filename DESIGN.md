@@ -10,6 +10,13 @@ colors:
   sun: "#f5d46d"
   pink: "#efa4b7"
   focus: "#8dd5ff"
+  graphite-ink: "#19202b"
+  button-ink: "#18202b"
+  skip-ink: "#17202b"
+  code-night: "#0f1018"
+  scroll-thumb: "#4b4f62"
+  sun-hover: "#ffe18b"
+  capture-lilac: "#a895ce"
 typography:
   display:
     fontFamily: "Noty Serif, Georgia, serif"
@@ -25,6 +32,10 @@ typography:
 rounded:
   surface: "15px"
   control: "9px"
+  utility: "7px"
+  skip-link: "8px"
+  inset: "1px"
+  scrollbar: "999px"
 spacing:
   compact: "10px"
   control: "16px"
@@ -71,8 +82,13 @@ ink, and a few purposeful note colours.
 - **Quiet Ink** (`#b6b4bc`): supporting copy and navigation at rest.
 - **Paper Mint** (`#b8ead5`): live-capture marker and product evidence cue.
 - **Signal Sun** (`#f5d46d`): primary action, logo, and restrained emphasis.
-- **Reference Pink** (`#efa4b7`): upstream-credit underline only.
+- **Reference Pink** (`#efa4b7`): a restrained accent drawn from the real note palette.
 - **Focus Blue** (`#8dd5ff`): visible keyboard focus.
+- **Capture Lilac** (`#a895ce`): a safe background behind the full-frame desktop
+  media while it loads; it comes from the recorded desktop, not a generic page panel.
+- **Utility darks** (`#19202b`, `#18202b`, `#17202b`, `#0f1018`) and
+  **Scroll Thumb** (`#4b4f62`) are limited to control contrast, the skip link,
+  the install command surface, and native-like scrolling.
 
 **The Evidence Accent Rule.** Use colourful pastel paper in the real product
 capture; do not turn every webpage section into a pastel card.
@@ -89,7 +105,10 @@ it should explain the interaction without sounding like marketing boilerplate.
 - **Display:** 700, `clamp(3.25rem, 6.5vw, 6.15rem)`, 0.9 line height; hero only.
 - **Section Heading:** the display family, `clamp(2.25rem, 4.4vw, 4rem)`, 0.96 line height.
 - **Body:** 400, 16px, 1.56 line height; supporting paragraphs are kept near 44–58ch.
-- **Control Label:** 700–850, 0.79–0.9rem; short and action-led.
+- **Control Label:** 700–850, 0.74–0.92rem; short and action-led.
+- **Supporting Copy:** 0.77–1.05rem, with fluid lede sizing from 1.04rem to
+  1.2rem; these compact steps keep captions and navigation subordinate to the
+  proof media.
 
 ## Layout
 
@@ -109,9 +128,10 @@ cards.
 ## Shapes
 
 Large proof surfaces use a 15px radius. Buttons use a compact 9px radius;
-navigation and motion controls are small, lightly bordered, and never pill-like
-by default. The page uses thin, translucent lines to contain rather than
-decorate.
+navigation uses 7px and the skip link 8px. A one-pixel inset rounds the media
+inside its parent surface. The only capsule is the browser scrollbar thumb
+(`999px`), not an interactive page control. The page uses thin, translucent
+lines to contain rather than decorate.
 
 ## Components
 
@@ -140,10 +160,10 @@ and the skip link remain available to keyboard users.
 
 ### Do:
 
-- **Do** use only real, English-language product crops in public proof media.
+- **Do** use only real, full-frame product captures in public proof media.
 - **Do** label future desktop support as future direction, never present availability.
 - **Do** preserve the visible Pause/Play control and reduced-motion behaviour.
-- **Do** keep upstream credit explicit and factual.
+- **Do** keep product availability claims explicit and factual.
 
 ### Don't:
 

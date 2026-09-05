@@ -1,3 +1,3 @@
 # Project
 
-- [Provenance](provenance.md): independent implementation, attribution to the original Noty, and brand rules.
+- [Project identity and licenses](provenance.md): implementation scope and third-party licenses.
