@@ -3,14 +3,14 @@
  *
  * QML unit tests cover pure geometry. This companion verifies that main.qml
  * actually consumes those contracts for transparent surfaces, edge placement,
- * idle presentation, native WYSIWYG Markdown and contextual actions.
+ * idle presentation and the native Qt Markdown editor with compact block controls.
  */
 
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const mainQml = readFileSync(new URL("../plasmoid/package/contents/ui/main.qml", import.meta.url), "utf8");
-const editorContract = readFileSync(new URL("../plasmoid/package/contents/ui/EditorContract.js", import.meta.url), "utf8");
+const notionEditor = readFileSync(new URL("../plasmoid/package/contents/ui/NotionEditor.qml", import.meta.url), "utf8");
 const paletteContract = readFileSync(new URL("../plasmoid/package/contents/ui/PaletteContract.js", import.meta.url), "utf8");
 const noteStore = readFileSync(new URL("../plasmoid/package/contents/ui/NoteStore.js", import.meta.url), "utf8");
 const themeContract = readFileSync(new URL("../plasmoid/package/contents/ui/ThemeContract.js", import.meta.url), "utf8");
@@ -42,6 +42,16 @@ assert.match(iconLicense, /MIT License[\s\S]*?Copyright \(c\) 2023 Phosphor Icon
  */
 function assertContract(pattern, requirement) {
     assert.match(mainQml, pattern, requirement);
+}
+
+/**
+ * Fails with a named requirement when a NotionEditor contract disappears.
+ * @param {RegExp} pattern Required component source pattern.
+ * @param {string} requirement Human-readable regression condition.
+ * @returns {void}
+ */
+function assertEditorContract(pattern, requirement) {
+    assert.match(notionEditor, pattern, requirement);
 }
 
 assert.doesNotMatch(configXml, /<entry name="transparentFan"/, "transparent fan must not expose a misleading background toggle");
@@ -108,29 +118,22 @@ assertContract(/readonly property font systemDefaultFont: Kirigami\.Theme\.defau
 assertContract(/readonly property string appearanceMode: ThemeContract\.appearanceMode\(Plasmoid\.configuration\.appearanceMode\)[\s\S]*?readonly property bool usesAdaptiveAppearance: appearanceMode === "adaptive"[\s\S]*?readonly property bool usesPlasmaAppearance: appearanceMode === "plasma"[\s\S]*?function colour\(index\)[\s\S]*?usesPlasmaAppearance[\s\S]*?return entry/, "appearance modes must retain a shared, palette-based note surface contract");
 assertContract(/function colour\(index\)[\s\S]*?if \(usesPlasmaAppearance\)[\s\S]*?return \{ paper: entry\.paper, ink: plasmaInkFor\(entry\), dash: entry\.dash \}[\s\S]*?function plasmaInkFor\(entry\)[\s\S]*?PaletteContract\.readableInk\(entry\.paper, systemTextColour\.toString\(\), entry\.ink\)/, "Plasma must preserve coloured paper and fall back from unreadable dark-theme text instead of rendering black cards");
 assertContract(/function stickColour\(index\)[\s\S]*?return Qt\.darker\(colour\(index\)\.paper, 1\.08\)[\s\S]*?function spineColour\(index\)[\s\S]*?return Qt\.darker\(colour\(index\)\.paper, 1\.14\)[\s\S]*?function perforationColour\(index\)[\s\S]*?return Qt\.darker\(colour\(index\)\.paper, 1\.34\)/, "Plasma sticks, spines and perforation must stay derived from each selected note paper");
-assertContract(/id: formatBubble[\s\S]*?color: root\.usesPlasmaAppearance[\s\S]*?root\.colour\(root\.selectedNote\.color\)\.paper/, "Plasma's selection bubble must use the current note paper rather than a black desktop background");
 assertContract(/id: archiveDrawer[\s\S]*?color: root\.colour\(0\)\.paper[\s\S]*?ArchiveConfirmation \{[\s\S]*?surfaceColor: archiveDrawer\.color/, "Plasma archive and its confirmation must inherit the readable paper surface");
 assertContract(/id: archiveDrawer[\s\S]*?color: root\.colour\(0\)\.paper/, "the archive surface must use the active visual-system paper rather than bypassing Plasma mode with a raw palette colour");
-assertContract(/id: titleEditor[\s\S]*?font\.pixelSize: root\.noteFontSize \+ 3[\s\S]*?font\.family: root\.noteFontFamily[\s\S]*?id: editor[\s\S]*?font\.pixelSize: root\.noteFontSize[\s\S]*?font\.family: root\.noteFontFamily/, "selected typography must apply coherently to title and note body");
-assertContract(/textFormat: TextEdit\.MarkdownText/, "the editor must render Markdown instead of exposing source syntax");
-assertContract(/id: boldAction[\s\S]*?checked: editor\.cursorSelection\.font\.bold[\s\S]*?editor\.cursorSelection\.font\.bold = checked/, "bold formatting must use Qt's official Action and cursorSelection pattern");
-assertContract(/id: italicAction[\s\S]*?checked: editor\.cursorSelection\.font\.italic[\s\S]*?editor\.cursorSelection\.font\.italic = checked/, "italic formatting must use Qt's official Action and cursorSelection pattern");
-assertContract(/function formatSelectionAsBlock\(editor, marker\)[\s\S]*?EditorContract\.visualBlockRange[\s\S]*?editor\.getFormattedText\(range\.start, range\.end\)[\s\S]*?editor\.remove\(range\.start, range\.end\)[\s\S]*?editor\.insert\(range\.start, replacement\)/, "quote and checklist actions must transform complete visual paragraphs around a selection");
-assertContract(/id: quoteAction[\s\S]*?root\.formatSelectionAsBlock\(editor, "> "\)[\s\S]*?id: checklistAction[\s\S]*?root\.formatSelectionAsBlock\(editor, "- \[ \] "\)/, "each block action must target the editor instance that owns its current selection");
-assertContract(/action: quoteAction[\s\S]*?onPressed: root\.formatSelectionAsBlock\(editor, "> "\)[\s\S]*?action: checklistAction[\s\S]*?onPressed: root\.formatSelectionAsBlock\(editor, "- \[ \] "\)/, "transient block buttons must apply on press before their selection context can disappear");
-assert.match(editorContract, /function visualBlockRange[\s\S]*?isBlockSeparator/, "editor contract must expand partial selections to block boundaries");
-assert.match(editorContract, /function withBlockMarker[\s\S]*?marker \+ line/, "editor contract must apply Markdown block markers at line starts");
-assert.match(editorContract, /function checklistEntries[\s\S]*?taskIndex[\s\S]*?position/, "editor contract must map Markdown tasks to rendered document positions");
-assertContract(/renderedChecklistEntries: EditorContract\.checklistEntries\([\s\S]*?id: taskCircle[\s\S]*?radius: width \/ 2[\s\S]*?glyph: "check-square"[\s\S]*?cursorShape: Qt\.PointingHandCursor[\s\S]*?toggleMarkdownChecklist/, "task rows must expose circular Phosphor checkmarks with a pointer cursor and working toggle");
-assertContract(/id: formatBubble[\s\S]*?hasSelection: editor\.selectedText\.length > 0[\s\S]*?height: 30/, "format actions must appear as a compact contextual bubble beside selected text");
-assert.doesNotMatch(mainQml, /editor\.selectedText\.length > 0 \|\|/, "format actions must not appear from hover or caret focus alone");
-assert.doesNotMatch(mainQml, /property bool editingMarkdown/, "the card must not switch into a raw Markdown source mode");
-assertContract(/root\.markdownEditor = editor/, "visual editor must be registered before contextual actions run");
+assertContract(/id: titleEditor[\s\S]*?font\.pixelSize: root\.noteFontSize \+ 3[\s\S]*?font\.family: root\.noteFontFamily[\s\S]*?NotionEditor \{[\s\S]*?noteFontFamily: root\.noteFontFamily[\s\S]*?noteFontSize: root\.noteFontSize/, "selected typography must apply coherently to title and NotionEditor body");
+assertContract(/NotionEditor \{[\s\S]*?markdown: root\.selectedNote \? root\.selectedNote\.body : ""[\s\S]*?onMarkdownEdited: root\.updateBody\(root\.selectedId, markdown\)[\s\S]*?onChecklistToggled: root\.toggleMarkdownChecklist\(root\.selectedId, taskIndex\)/, "the card must delegate one Markdown document and task intents to NotionEditor while NoteStore remains authoritative");
+assertEditorContract(/TextArea \{[\s\S]*?textFormat: TextEdit\.MarkdownText[\s\S]*?selectByMouse: true[\s\S]*?selectByKeyboard: true[\s\S]*?persistentSelection: true[\s\S]*?onTextChanged:[\s\S]*?control\.markdownEdited\(text\)/, "NotionEditor must retain Qt's stock editable Markdown document and normal persistence signal");
+assertEditorContract(/id: formatBubble[\s\S]*?hasSelection: editor\.selectedText\.length > 0[\s\S]*?visible: opacity > 0[\s\S]*?height: 34[\s\S]*?glyph: "text-b"[\s\S]*?glyph: "text-italic"[\s\S]*?glyph: "quotes"[\s\S]*?glyph: "check-square"/, "the contextual bubble must appear only for a selection and contain the four supported Qt/Markdown actions");
+assertEditorContract(/id: taskBlock[\s\S]*?Accessible\.role: Accessible\.CheckBox[\s\S]*?radius: 5[\s\S]*?cursorShape: Qt\.PointingHandCursor[\s\S]*?control\.requestChecklistToggle/, "task blocks must use one larger rounded control with pointer, keyboard and accessibility support");
+assertEditorContract(/renderedQuoteEntries: EditorContract\.quoteEntries[\s\S]*?Quiet vertical rules[\s\S]*?width: 3/, "quote blocks must derive their visual rule from the same rendered Markdown document");
+assert.doesNotMatch(notionEditor, /property bool editingMarkdown/, "NotionEditor must not switch into a raw Markdown source mode");
 assertContract(/function stickColour\(index\)[\s\S]*?Qt\.darker\(colour\(index\)\.paper, 1\.08\)/, "sticks must stay close to the note paper tone");
 assertContract(/function spineColour\(index\)[\s\S]*?Qt\.darker\(colour\(index\)\.paper, 1\.14\)/, "title spine must be only one restrained step darker than its stick");
 assertContract(/id: titleSpine[\s\S]*?width: 40[\s\S]*?root\.spineColour\(root\.selectedNote\.color\)[\s\S]*?anchors\.leftMargin: 14[\s\S]*?rotation: -90/, "title spine must be narrower, use the soft palette and read bottom-to-top");
 assertContract(/id: spinePerforation[\s\S]*?width: 2[\s\S]*?root\.perforationColour\(root\.selectedNote\.color\)[\s\S]*?opacity: 0\.88/, "perforation must be thicker and use a darker tone of the current paper");
-assertContract(/readonly property int cardActionIconSize: iconSizeXs[\s\S]*?id: ruledPaper[\s\S]*?root\.selectedNote\.ruled === true[\s\S]*?Math\.ceil\(ruledPaper\.height \/ 28\)[\s\S]*?id: ruledLinesButton[\s\S]*?Layout\.preferredWidth: 32[\s\S]*?root\.setRuled\(root\.selectedId, checked\)[\s\S]*?glyph: "list"[\s\S]*?glyphSize: root\.cardActionIconSize/, "each note must toggle ruled paper with the shared 16 pt Phosphor Regular icon");
+assertContract(/readonly property int cardActionIconSize: iconSizeXs/, "each note must expose the shared 16 pt Phosphor Regular icon size");
+assert.match(notionEditor, /id: ruledPaper[\s\S]*?visible: control\.ruled[\s\S]*?Math\.ceil\(ruledPaper\.height \/ 28\)/, "the native editor must retain the ruled-paper surface inside the note card");
+assertContract(/id: ruledLinesButton[\s\S]*?Layout\.preferredWidth: 32[\s\S]*?root\.setRuled\(root\.selectedId, checked\)[\s\S]*?glyph: "list"[\s\S]*?glyphSize: root\.cardActionIconSize/, "each note must toggle ruled paper with the shared 16 pt Phosphor Regular icon");
 assertContract(/onClicked: root\.closeNoteCard\(\)[\s\S]*?Accessible\.name: root\.text\("Collapse note", "Свернуть заметку"\)[\s\S]*?glyph: "x"[\s\S]*?glyphSize: root\.cardActionIconSize/, "the card header must collapse with the selected Phosphor x icon at the same scale as footer actions");
 assertContract(/id: archiveButton[\s\S]*?controlsHovered: archiveArea\.containsMouse[\s\S]*?archiveHandoffArea\.containsMouse \|\| openArchiveArea\.containsMouse[\s\S]*?animatedWidth: controlsHovered \? 158 : 32[\s\S]*?id: openArchiveButton[\s\S]*?anchors\.right: archiveIconButton\.left[\s\S]*?glyph: "folder-open"[\s\S]*?text: root\.text\("Open archive", "Открыть архив"\)[\s\S]*?onClicked: root\.toggleArchiveDrawer\(\)[\s\S]*?id: archiveIconButton[\s\S]*?glyph: "archive"[\s\S]*?id: archiveHandoffArea[\s\S]*?id: archiveTooltip[\s\S]*?anchors\.bottom: archiveIconButton\.top[\s\S]*?text: root\.text\("Archive note", "Архивировать заметку"\)/, "archive must be icon-only, show its local tooltip above and reveal the secondary archive browser on the left without a hover gap");
 assertContract(/id: archiveIconButton[\s\S]*?color: "transparent"[\s\S]*?border\.width: archiveArea\.containsMouse \? 1 : 0[\s\S]*?glyph: "archive"/, "archive icon must remain visually bare until its subtle hover outline appears");
@@ -152,10 +155,11 @@ for (const glyph of ["archive", "arrow-counter-clockwise", "check-square", "fold
 assert.match(notyActionButton, /PlasmaComponents\.ToolButton[\s\S]*?property string glyph[\s\S]*?property int glyphSize: 16[\s\S]*?property color glyphColor: "#667784"[\s\S]*?contentItem: Item[\s\S]*?NotyIcon \{[\s\S]*?width: control\.glyphSize[\s\S]*?height: control\.glyphSize[\s\S]*?background: Rectangle[\s\S]*?control\.hovered[\s\S]*?border\.width/, "standard actions must keep the ToolButton hit area separate from the centred, token-sized Phosphor glyph");
 assert.match(notyActionButton, /HoverHandler[\s\S]*?acceptedDevices: PointerDevice\.Mouse \| PointerDevice\.TouchPad[\s\S]*?cursorShape: Qt\.PointingHandCursor/, "every shared icon button must expose the native pointing-hand cursor");
 assert.doesNotMatch(notyActionButton, /contentItem:\s*NotyIcon/, "ToolButton must never stretch the glyph itself to the full control bounds");
-assertContract(/id: closeArchiveButton[\s\S]*?glyph: "x"[\s\S]*?id: formatBubble[\s\S]*?NotyActionButton \{[\s\S]*?glyph: "text-b"[\s\S]*?id: ruledLinesButton[\s\S]*?glyph: "list"/, "card, archive and contextual formatting actions must share the same local button component");
+assertContract(/id: ruledLinesButton[\s\S]*?glyph: "list"/, "the card must retain the selected Phosphor list icon for ruled paper");
 assert.match(mainQml, /model: root\.palette\.length[\s\S]*?delegate: Rectangle[\s\S]*?MouseArea \{[\s\S]*?hoverEnabled: true[\s\S]*?cursorShape: Qt\.PointingHandCursor[\s\S]*?onClicked: root\.setColor\(root\.selectedId, index\)/, "palette colour swatches must use a pointing-hand cursor");
 assert.match(mainQml, /MouseArea \{\s*anchors\.fill: parent\s*hoverEnabled: true\s*cursorShape: Qt\.PointingHandCursor\s*onClicked: root\.createNote\(\)/, "the empty new-note stick must use a pointing-hand cursor");
-assertContract(/glyph: "plus"[\s\S]*?glyph: "trash-simple"[\s\S]*?glyph: "arrow-counter-clockwise"[\s\S]*?glyph: "check-square"[\s\S]*?glyph: "text-b"[\s\S]*?glyph: "text-italic"[\s\S]*?glyph: "quotes"[\s\S]*?glyph: "list"[\s\S]*?glyph: "folder-open"[\s\S]*?glyph: "archive"/, "the card must use the chosen Phosphor Regular glyph mapping");
+assertContract(/glyph: "plus"[\s\S]*?glyph: "trash-simple"[\s\S]*?glyph: "arrow-counter-clockwise"[\s\S]*?glyph: "list"[\s\S]*?glyph: "folder-open"[\s\S]*?glyph: "archive"/, "all card and archive actions outside the editor must use the chosen Phosphor Regular glyph mapping");
+assertEditorContract(/glyph: "text-b"[\s\S]*?glyph: "text-italic"[\s\S]*?glyph: "quotes"[\s\S]*?glyph: "check-square"/, "the editor's four visual actions must use the selected Phosphor Regular glyph mapping");
 assert.match(configGeneral, /icons\/text-aa\.svg/, "settings must use the chosen Phosphor typography glyph");
 assert.match(configGeneral, /icons\/trash-simple\.svg/, "settings must use the chosen Phosphor deletion glyph");
 assert.match(configGeneral, /icons\/plus-circle\.svg/, "settings must use the chosen Phosphor add glyph");
@@ -178,6 +182,6 @@ assert.match(themeContract, /function appearanceMode\(value\)[\s\S]*?"adaptive"[
 assert.match(plasmaIconNames, /"archive": "archive"[\s\S]*?"folder-open": "folder-open"[\s\S]*?"x": "window-close"/, "the Plasma icon-theme mapping must preserve selected Noty action semantics");
 assert.match(plasmaIconNames, /"list": "view-list-text"/, "the Plasma icon-theme mapping must use a text-row glyph for ruled paper");
 assert.match(plasmaIconNames, /"plus": "list-add"/, "the bare new-note plus must keep its Plasma equivalent");
-assert.ok((mainQml.match(/usePlasmaIconTheme: root\.usePlasmaIconTheme/g) || []).length >= 11, "every direct card, archive and editor action must receive the Plasma icon-theme opt-in");
+assert.ok(((mainQml + notionEditor).match(/usePlasmaIconTheme: \w+\.usePlasmaIconTheme/g) || []).length >= 14, "every direct card, archive and editor action must receive the Plasma icon-theme opt-in");
 
 console.log("Plasmoid visual and editing contracts are intact.");

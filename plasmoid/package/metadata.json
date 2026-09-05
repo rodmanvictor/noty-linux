@@ -7,11 +7,13 @@
     ],
     "Category": "Utilities",
     "Description": "Sticky notes docked to the Plasma desktop edge",
-    "Icon": "note",
-    "Id": "com.victor.noty",
-    "License": "MIT",
-    "Name": "Noty",
-    "Version": "0.1.0"
+      "Icon": "note",
+      "Id": "com.victor.noty",
+      "License": "MIT",
+      "Name": "Noty",
+      "Version": "0.1.0",
+      "Website": "https://github.com/rodmanvictor/noty-linux",
+      "BugReportUrl": "https://github.com/rodmanvictor/noty-linux/issues"
   },
   "KPackageStructure": "Plasma/Applet",
   "X-Plasma-API-Minimum-Version": "6.0"

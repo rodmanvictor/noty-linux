@@ -1,211 +1,186 @@
 import QtQuick
-import QtQuick.Controls
 import QtTest
 
+import "../package/contents/ui" as NotyUi
 import "../package/contents/ui/EditorContract.js" as EditorContract
 
 /**
- * @brief Verifies the native WYSIWYG Markdown path used by the note card.
+ * @brief Verifies NotionEditor uses Qt's document engine with thin visual blocks.
  *
- * These tests exercise the same Qt 6 `TextEdit.MarkdownText` and
- * `cursorSelection` APIs as the live Plasmoid. They prove that formatting is
- * rendered without exposing markup while the persisted value remains Markdown.
+ * The suite exercises the same QML component embedded by the note card. It keeps
+ * Markdown in the underlying TextArea while proving the contextual menu, task
+ * controls, and quote-rule mappings are based on one source document.
  */
-TestCase {
-    name: "RichEditor"
-    width: 480
-    height: 240
-    when: windowShown
+Item {
+    id: testSurface
+    width: 520
+    height: 280
 
-    Component {
-        id: editorComponent
+    Rectangle {
+        anchors.fill: parent
+        color: "#20242a"
+    }
 
-        Item {
-            id: editorHarness
-            property alias editor: testEditor
-            property alias boldAction: testBoldAction
-            property alias italicAction: testItalicAction
-            property alias quoteAction: testQuoteAction
-            property alias checklistAction: testChecklistAction
-            property alias quoteButton: testQuoteButton
-            property alias checklistButton: testChecklistButton
+    Rectangle {
+        id: snapshotSurface
+        anchors.centerIn: parent
+        width: 480
+        height: 236
+        radius: 14
+        color: "#d8f1e4"
 
-            width: 420
-            height: 180
+        NotyUi.NotionEditor {
+            id: snapshotEditor
+            anchors.fill: parent
+            anchors.margins: 18
+            noteId: "snapshot"
+            markdown: "> Keep the note quiet.\n\n- [ ] Write the release note\n- [x] Check the first build\n\nFormat this selection"
+            paperColor: snapshotSurface.color
+            inkColor: "#27323a"
+            actionIconColor: "#667784"
+            actionIconOnDarkColor: snapshotSurface.color
+            actionIconBorder: "#a8bbc7"
+        }
 
-            /**
-             * @brief Applies a Markdown block marker to complete selected paragraphs.
-             * @param marker Quote or unchecked-task prefix.
-             */
-            function formatSelectionAsBlock(marker) {
-                const plainText = testEditor.getText(0, testEditor.length)
-                const range = EditorContract.visualBlockRange(
-                    plainText,
-                    testEditor.selectionStart,
-                    testEditor.selectionEnd
-                )
-                const markdown = testEditor.getFormattedText(range.start, range.end)
-                const replacement = EditorContract.withBlockMarker(markdown, marker)
-                testEditor.remove(range.start, range.end)
-                testEditor.insert(range.start, replacement)
-            }
-
-            TextEdit {
-                id: testEditor
-                width: parent.width
-                height: 120
-                textFormat: TextEdit.MarkdownText
-                selectByMouse: true
-                persistentSelection: true
-            }
-
-            Action {
-                id: testBoldAction
-                enabled: testEditor.selectedText.length > 0
-                checkable: true
-                checked: testEditor.cursorSelection.font.bold
-                onTriggered: testEditor.cursorSelection.font.bold = checked
-            }
-
-            Action {
-                id: testItalicAction
-                enabled: testEditor.selectedText.length > 0
-                checkable: true
-                checked: testEditor.cursorSelection.font.italic
-                onTriggered: testEditor.cursorSelection.font.italic = checked
-            }
-
-
-            Action {
-                id: testQuoteAction
-                enabled: testEditor.selectedText.length > 0
-                onTriggered: editorHarness.formatSelectionAsBlock("> ")
-            }
-
-            Action {
-                id: testChecklistAction
-                enabled: testEditor.selectedText.length > 0
-                onTriggered: editorHarness.formatSelectionAsBlock("- [ ] ")
-            }
-
-            ToolButton {
-                id: testQuoteButton
-                y: 132
-                width: 32
-                height: 32
-                focusPolicy: Qt.NoFocus
-                action: testQuoteAction
-                onPressed: editorHarness.formatSelectionAsBlock("> ")
-            }
-
-            ToolButton {
-                id: testChecklistButton
-                x: 40
-                y: 132
-                width: 32
-                height: 32
-                focusPolicy: Qt.NoFocus
-                action: testChecklistAction
-                onPressed: editorHarness.formatSelectionAsBlock("- [ ] ")
+        Timer {
+            interval: 80
+            running: true
+            repeat: false
+            onTriggered: {
+                const selectionStart = snapshotEditor.textEditor.getText(0, snapshotEditor.textEditor.length).indexOf("Format")
+                snapshotEditor.textEditor.select(selectionStart, selectionStart + "Format this".length)
             }
         }
     }
 
-    function test_markdown_renders_without_showing_source_markers() {
-        const harness = createTemporaryObject(editorComponent, this)
-        verify(harness !== null)
-        const editor = harness.editor
-        editor.text = "**Bold** and *italic*\n\n- [ ] Task"
+    TestCase {
+        name: "RichEditor"
+        when: windowShown
 
-        compare(editor.getText(0, editor.length), "Bold and italic\u2029Task")
-        compare(editor.getFormattedText(0, editor.length), "**Bold** and *italic*\n\n- [ ] Task\n")
+    Component {
+        id: editorComponent
+
+        NotyUi.NotionEditor {
+            id: editorHarness
+            width: 440
+            height: 200
+            noteId: "note"
+            paperColor: "#d8f1e4"
+            inkColor: "#27323a"
+            actionIconColor: "#667784"
+            actionIconOnDarkColor: "#d8f1e4"
+            actionIconBorder: "#a8bbc7"
+            property string lastSavedMarkdown: ""
+            property int toggledTaskIndex: -1
+            onMarkdownEdited: function(nextMarkdown) { lastSavedMarkdown = nextMarkdown }
+            onChecklistToggled: function(nextTaskIndex) { toggledTaskIndex = nextTaskIndex }
+        }
     }
 
-    function test_selection_formatting_remains_markdown() {
-        const harness = createTemporaryObject(editorComponent, this)
+    /** @brief Creates a visible editor harness and lets Qt finish the initial layout. */
+    function createEditor(markdown) {
+        const harness = createTemporaryObject(editorComponent, testSurface)
         verify(harness !== null)
-        const editor = harness.editor
-        editor.text = "Bold and italic"
-        editor.select(0, 4)
-        harness.boldAction.trigger()
+        harness.markdown = markdown
+        wait(0)
+        return harness
+    }
 
-        compare(editor.getText(0, editor.length), "Bold and italic")
+    function test_markdown_renders_without_showing_source_markers() {
+        const harness = createEditor("**Bold** and *italic*\n\n- [ ] Task")
+        compare(harness.textEditor.getText(0, harness.textEditor.length), "Bold and italic\u2029Task")
+        compare(harness.textEditor.getFormattedText(0, harness.textEditor.length), "**Bold** and *italic*\n\n- [ ] Task\n")
+        compare(harness.taskControlCount, 1)
+    }
+
+    function test_task_control_forwards_one_store_intent() {
+        const harness = createEditor("- [ ] First\n- [x] Second")
+        compare(harness.taskControlCount, 2)
+        harness.requestChecklistToggle(1)
+        compare(harness.toggledTaskIndex, 1)
+    }
+
+    function test_selection_actions_keep_markdown_as_the_single_source() {
+        const harness = createEditor("Bold and italic")
+        const editor = harness.textEditor
+        editor.select(0, 4)
+        verify(harness.bubbleVisible)
+        harness.applyBold()
         compare(editor.text.trim(), "**Bold** and italic")
 
         editor.select(9, 15)
-        harness.italicAction.trigger()
+        harness.applyItalic()
         compare(editor.text.trim(), "**Bold** and *italic*")
+        compare(harness.lastSavedMarkdown.trim(), "**Bold** and *italic*")
     }
 
-    function test_checklist_can_be_inserted_in_visual_mode() {
-        const harness = createTemporaryObject(editorComponent, this)
-        verify(harness !== null)
-        const editor = harness.editor
-        editor.text = "Plan"
-        editor.insert(editor.length, "\n- [ ] Ship it")
-
-        compare(editor.getText(0, editor.length), "Plan\u2029\u2029Ship it")
-        compare(editor.text, "Plan\n\n- [ ] Ship it\n")
-    }
-
-    function test_partial_word_selection_becomes_a_complete_checklist_block() {
-        const harness = createTemporaryObject(editorComponent, this)
-        verify(harness !== null)
-        const editor = harness.editor
-        editor.text = "First paragraph\n\nSecond paragraph"
-        const plainText = editor.getText(0, editor.length)
-        const wordStart = plainText.indexOf("Second") + 2
-        editor.select(wordStart, wordStart + 3)
-        harness.checklistAction.trigger()
+    function test_partial_selection_becomes_a_complete_checklist_block() {
+        const harness = createEditor("First paragraph\n\nSecond paragraph")
+        const editor = harness.textEditor
+        const start = editor.getText(0, editor.length).indexOf("Second") + 2
+        editor.select(start, start + 3)
+        harness.checklistSelection()
 
         verify(editor.text.indexOf("First paragraph") === 0)
         verify(editor.text.indexOf("- [ ] Second paragraph") !== -1)
         verify(editor.text.indexOf("- [ ] First paragraph") === -1)
-        compare(editor.getText(0, editor.length), "First paragraph\u2029\u2029Second paragraph")
     }
 
-    function test_partial_word_selection_becomes_a_complete_quote_block() {
-        const harness = createTemporaryObject(editorComponent, this)
-        verify(harness !== null)
-        const editor = harness.editor
-        editor.text = "First paragraph\n\nSecond paragraph"
+    function test_partial_selection_becomes_a_complete_quote_block() {
+        const harness = createEditor("First paragraph\n\nSecond paragraph")
+        const editor = harness.textEditor
         editor.select(2, 5)
-        harness.quoteAction.trigger()
+        harness.quoteSelection()
 
         verify(editor.text.indexOf("> First paragraph") === 0)
         verify(editor.text.indexOf("> Second paragraph") === -1)
-        compare(editor.getText(0, editor.length), "First paragraph\u2029Second paragraph")
     }
 
-    function test_checklist_entries_follow_rendered_labels_and_completion_state() {
-        const markdown = "Intro\n\n- [ ] **Ship** it\n- [x] Review\n- [ ] Review"
-        const rendered = "Intro\u2029\u2029Ship it\u2029Review\u2029Review"
-        const entries = EditorContract.checklistEntries(markdown, rendered)
+    function test_task_and_quote_entries_follow_rendered_document_positions() {
+        const markdown = "> **First** quote\n> Second quote\n\n- [ ] **Ship** it\n- [x] Review\n- [ ] Review"
+        const rendered = "First quote\u2028Second quote\u2029\u2029Ship it\u2029Review\u2029Review"
+        const tasks = EditorContract.checklistEntries(markdown, rendered)
+        const quotes = EditorContract.quoteEntries(markdown, rendered)
 
-        compare(entries.length, 3)
-        compare(entries[0].taskIndex, 0)
-        compare(entries[0].position, rendered.indexOf("Ship it"))
-        verify(!entries[0].checked)
-        verify(entries[1].checked)
-        verify(!entries[2].checked)
-        verify(entries[2].position > entries[1].position)
+        compare(tasks.length, 3)
+        compare(tasks[0].position, rendered.indexOf("Ship it"))
+        verify(tasks[1].checked)
+        verify(tasks[2].position > tasks[1].position)
+        compare(quotes.length, 2)
+        compare(quotes[0].position, rendered.indexOf("First quote"))
+        verify(quotes[1].position > quotes[0].position)
     }
 
-    function test_context_button_press_preserves_selection_and_triggers_block_actions() {
-        const harness = createTemporaryObject(editorComponent, this)
-        verify(harness !== null)
-        const editor = harness.editor
-        editor.text = "Alpha paragraph\n\nBeta paragraph"
-        editor.select(2, 6)
-        verify(harness.quoteAction.enabled)
-        verify(harness.quoteButton.enabled)
-        harness.quoteButton.click()
-        verify(editor.text.indexOf("> Alpha paragraph") === 0)
+    /** @brief Guards the real overlay coordinates, not merely the Markdown mapping. */
+    function test_task_controls_follow_their_rendered_rows_after_layout() {
+        const harness = createEditor("- [ ] First task\n- [x] Second task")
+        tryVerify(function() {
+            return findChild(harness, "notionTaskBlock-0") !== null
+                && findChild(harness, "notionTaskBlock-1") !== null
+        }, 1000)
+        wait(0)
 
-        const betaStart = editor.getText(0, editor.length).indexOf("Beta") + 1
-        editor.select(betaStart, betaStart + 3)
-        verify(harness.checklistAction.enabled)
-        harness.checklistButton.click()
-        verify(editor.text.indexOf("- [ ] Beta paragraph") !== -1)
+        const rendered = harness.textEditor.getText(0, harness.textEditor.length)
+        const firstLabelRect = harness.textEditor.positionToRectangle(rendered.indexOf("First task"))
+        const secondLabelRect = harness.textEditor.positionToRectangle(rendered.indexOf("Second task"))
+        const firstControl = findChild(harness, "notionTaskBlock-0")
+        const secondControl = findChild(harness, "notionTaskBlock-1")
+
+        verify(Math.abs(firstControl.y + firstControl.height / 2 - (firstLabelRect.y + firstLabelRect.height / 2)) <= 4)
+        verify(Math.abs(secondControl.y + secondControl.height / 2 - (secondLabelRect.y + secondLabelRect.height / 2)) <= 4)
+        mouseClick(secondControl, secondControl.width / 2, secondControl.height / 2, Qt.LeftButton)
+        compare(harness.toggledTaskIndex, 1)
+    }
+
+    function test_export_notion_editor_snapshot() {
+        tryVerify(function() { return snapshotEditor.bubbleVisible }, 1000)
+        // Allow the document layout and the bubble's intentional 110 ms entrance
+        // transition to finish before recording the visual regression fixture.
+        wait(160)
+        const rendered = grabImage(snapshotSurface)
+        compare(rendered.width, snapshotSurface.width)
+        compare(rendered.height, snapshotSurface.height)
+        rendered.save("build/visual-snapshots/notion-editor.png")
+    }
     }
 }

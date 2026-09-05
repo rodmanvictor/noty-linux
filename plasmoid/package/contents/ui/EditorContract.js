@@ -51,7 +51,7 @@ function withBlockMarker(markdown, marker) {
 }
 
 /**
- * Removes the inline Markdown tokens that Qt omits from rendered task labels.
+ * Removes inline Markdown tokens that Qt omits from rendered task labels.
  * @param {string} markdown Inline Markdown from one checklist row.
  * @returns {string} Best-effort visible label used for document positioning.
  */
@@ -65,10 +65,6 @@ function visibleInlineText(markdown) {
 
 /**
  * Maps Markdown task rows to their rendered QTextDocument positions.
- *
- * Positions are resolved sequentially so repeated task labels remain distinct.
- * Empty labels are omitted until the user types visible content because Qt does
- * not expose a stable QML position for their zero-length rendered block.
  *
  * @param {string} markdown Markdown stored by the note.
  * @param {string} plainText Rendered text returned by TextEdit.getText().
@@ -96,6 +92,37 @@ function checklistEntries(markdown, plainText) {
             searchFrom = position + Math.max(1, label.length)
         }
         taskIndex += 1
+    })
+    return entries
+}
+
+/**
+ * Maps one-line Markdown quote blocks to their rendered QTextDocument positions.
+ *
+ * Qt renders quote indentation but does not expose a QML delegate for the visual
+ * rule. Positions are resolved in document order so repeated quoted text remains
+ * distinct. Multi-line quotes produce one rule per source line, which connects
+ * visually because Qt keeps those lines adjacent.
+ *
+ * @param {string} markdown Markdown stored by the note.
+ * @param {string} plainText Rendered text returned by TextEdit.getText().
+ * @returns {Array<{label: string, position: number}>} Positioned quote controls.
+ */
+function quoteEntries(markdown, plainText) {
+    const rendered = plainText || ""
+    const entries = []
+    let searchFrom = 0
+    ;(markdown || "").replace(/\r\n/g, "\n").split("\n").forEach(function(line) {
+        const match = line.match(/^\s*>\s?(.*)$/)
+        if (!match) {
+            return
+        }
+        const label = visibleInlineText(match[1])
+        const position = label.length > 0 ? rendered.indexOf(label, searchFrom) : -1
+        if (position >= 0) {
+            entries.push({ label: label, position: position })
+            searchFrom = position + Math.max(1, label.length)
+        }
     })
     return entries
 }

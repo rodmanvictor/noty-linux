@@ -9,7 +9,6 @@ import org.kde.plasma.plasmoid
 
 import "LayoutContract.js" as LayoutContract
 import "NoteStore.js" as NoteStore
-import "EditorContract.js" as EditorContract
 import "I18n.js" as I18n
 import "PaletteContract.js" as PaletteContract
 import "ThemeContract.js" as ThemeContract
@@ -42,8 +41,6 @@ PlasmoidItem {
     property bool paletteReady: false
     property var notes: []
     property string selectedId: ""
-    /** @brief Reference to the nested visual Markdown editor while a note card exists. */
-    property var markdownEditor: null
     /** @brief One-pixel outer-edge target used to place the desktop dialog flush. */
     property var dialogAnchor: null
     /** @brief Persisted language code normalized to one of the supported locales. */
@@ -411,30 +408,10 @@ PlasmoidItem {
     }
 
     /**
-     * @brief Converts every selected visual paragraph to a Markdown block.
-     * @param editor Active editor instance that owns the selection.
-     * @param marker Markdown prefix for a quote or unchecked task row.
-     */
-    function formatSelectionAsBlock(editor, marker) {
-        if (!editor || editor.selectedText.length === 0) {
-            return
-        }
-        const plainText = editor.getText(0, editor.length)
-        const range = EditorContract.visualBlockRange(plainText, editor.selectionStart, editor.selectionEnd)
-        const markdown = editor.getFormattedText(range.start, range.end)
-        const replacement = EditorContract.withBlockMarker(markdown, marker)
-        if (replacement.length === 0) {
-            return
-        }
-        editor.forceActiveFocus()
-        editor.remove(range.start, range.end)
-        editor.insert(range.start, replacement)
-    }
-
-    /**
-     * @brief Toggles one rendered Markdown task without exposing its source.
+     * @brief Toggles one rendered Markdown task without exposing source markup.
      * @param id Identifier of the edited note.
      * @param taskIndex Zero-based index among Markdown task rows.
+     * @sideeffect Persists the new Markdown; NotionEditor reloads through its body binding.
      */
     function toggleMarkdownChecklist(id, taskIndex) {
         const next = NoteStore.withToggledMarkdownChecklist(notes, id, taskIndex)
@@ -1624,306 +1601,37 @@ PlasmoidItem {
                                 }
                             }
                             /**
-                             * @brief WYSIWYG Markdown editor with a contextual formatting palette.
+                             * @brief Native Qt document engine with Notion-like visual block controls.
                              *
-                             * Qt renders CommonMark and GitHub task lists directly, while the
-                             * `text` property remains Markdown for the existing note store.
+                             * The component owns no note model. It emits Markdown changes and task
+                             * intents, while the established NoteStore remains the single source of truth.
                              */
-                            Item {
-                                id: editorSurface
+                            NotionEditor {
+                                id: editor
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
-
-                                /** @brief Optional notebook guides drawn below the Markdown document. */
-                                Item {
-                                    id: ruledPaper
-                                    anchors.fill: parent
-                                    visible: root.selectedNote && root.selectedNote.ruled === true
-                                    clip: true
-
-                                    Repeater {
-                                        model: Math.ceil(ruledPaper.height / 28)
-                                        delegate: Rectangle {
-                                            required property int index
-                                            x: 0
-                                            y: 24 + index * 28
-                                            width: ruledPaper.width
-                                            height: 1
-                                            color: root.selectedNote
-                                                ? Qt.darker(root.colour(root.selectedNote.color).paper, 1.32)
-                                                : root.actionIconColour
-                                            opacity: 0.18
-                                        }
-                                    }
-                                }
-
-                                TextArea {
-                                    id: editor
-                                    anchors.fill: parent
-                                    z: 1
-                                    textFormat: TextEdit.MarkdownText
-                                    wrapMode: TextEdit.Wrap
-                                    selectByMouse: true
-                                    selectByKeyboard: true
-                                    persistentSelection: true
-                                    font.pixelSize: root.noteFontSize
-                                    font.family: root.noteFontFamily
-                                    leftPadding: 0
-                                    rightPadding: 0
-                                    topPadding: 8
-                                    bottomPadding: 8
-                                    placeholderText: root.text("Start writing…", "Начните писать…")
-                                    color: root.selectedNote ? root.colour(root.selectedNote.color).ink : root.colour(0).ink
-                                    selectionColor: root.usesPlasmaAppearance
-                                        ? Qt.rgba(root.systemHighlightColour.r, root.systemHighlightColour.g, root.systemHighlightColour.b, 0.28)
-                                        : Qt.rgba(0.16, 0.14, 0.11, 0.22)
-                                    selectedTextColor: color
-                                    background: Rectangle { color: "transparent" }
-
-                                    /** @brief Guards KConfig from writes while another note loads. */
-                                    property bool loadingStoredText: false
-                                    property string loadedNoteId: ""
-                                    /** @brief Positioned Markdown tasks rendered by the circular control overlay. */
-                                    readonly property var renderedChecklistEntries: EditorContract.checklistEntries(
-                                        text,
-                                        getText(0, length)
-                                    )
-
-                                    /**
-                                     * @brief Loads the selected note into Qt's visual Markdown document.
-                                     * @param forceReload True to reload the same note explicitly.
-                                     */
-                                    function loadSelectedNote(forceReload) {
-                                        const nextId = root.selectedNote ? root.selectedNote.id : ""
-                                        if (!forceReload && nextId === loadedNoteId) {
-                                            return
-                                        }
-                                        loadingStoredText = true
-                                        text = root.selectedNote ? root.selectedNote.body : ""
-                                        loadedNoteId = nextId
-                                        loadingStoredText = false
-                                    }
-
-                                    onTextChanged: if (!loadingStoredText && loadedNoteId === root.selectedId) root.updateBody(root.selectedId, text)
-                                    Component.onCompleted: {
-                                        root.markdownEditor = editor
-                                        loadSelectedNote()
-                                    }
-
-                                    Connections {
-                                        target: root
-                                        function onSelectedNoteChanged() { editor.loadSelectedNote() }
-                                    }
-                                }
-
-                                /**
-                                 * @brief Circular interactive controls covering Qt's square task markers.
-                                 *
-                                 * QTextDocument owns the text and Markdown source. This overlay only
-                                 * replaces the native marker's presentation and hit target.
-                                 */
-                                Item {
-                                    anchors.fill: parent
-                                    clip: true
-                                    z: 12
-
-                                    Repeater {
-                                        model: editor.renderedChecklistEntries
-
-                                        delegate: FocusScope {
-                                            id: taskControl
-                                            required property var modelData
-                                            readonly property rect textRect: editor.positionToRectangle(taskControl.modelData.position)
-                                            x: Math.max(0, textRect.x - 40)
-                                            y: textRect.y - Math.max(1, (height - textRect.height) / 2)
-                                            width: 36
-                                            height: Math.max(20, textRect.height + 2)
-                                            activeFocusOnTab: true
-                                            visible: y + height >= 0 && y <= parent.height
-                                            Accessible.role: Accessible.CheckBox
-                                            Accessible.name: root.text("Toggle task: ", "Переключить задачу: ") + taskControl.modelData.label
-                                            Accessible.checked: taskControl.modelData.checked
-                                            Accessible.onPressAction: root.toggleMarkdownChecklist(root.selectedId, taskControl.modelData.taskIndex)
-
-                                            Rectangle {
-                                                anchors.fill: parent
-                                                color: root.selectedNote ? root.colour(root.selectedNote.color).paper : root.colour(0).paper
-                                            }
-
-                                            Rectangle {
-                                                id: taskCircle
-                                                anchors.left: parent.left
-                                                anchors.leftMargin: 8
-                                                anchors.verticalCenter: parent.verticalCenter
-                                                width: 18
-                                                height: 18
-                                                radius: width / 2
-                                                color: taskControl.modelData.checked
-                                                    ? (root.selectedNote ? root.colour(root.selectedNote.color).ink : root.colour(0).ink)
-                                                    : "transparent"
-                                                border.width: taskControl.activeFocus ? 2 : 1
-                                                border.color: root.selectedNote ? root.colour(root.selectedNote.color).ink : root.colour(0).ink
-                                                scale: taskArea.containsMouse ? 1.08 : 1
-
-                                                Behavior on color { ColorAnimation { duration: 140 } }
-                                                Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
-
-                                                NotyIcon {
-                                                    anchors.centerIn: parent
-                                                    width: 12
-                                                    height: 12
-                                                    visible: taskControl.modelData.checked
-                                                    glyph: "check-square"
-                                                    color: root.actionIconOnDarkColour
-                                                    usePlasmaIconTheme: root.usePlasmaIconTheme
-                                                }
-                                            }
-
-                                            MouseArea {
-                                                id: taskArea
-                                                anchors.fill: parent
-                                                hoverEnabled: true
-                                                cursorShape: Qt.PointingHandCursor
-                                                onPressed: taskControl.forceActiveFocus()
-                                                onClicked: root.toggleMarkdownChecklist(root.selectedId, taskControl.modelData.taskIndex)
-                                            }
-
-                                            Keys.onPressed: function(event) {
-                                                if (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                                                    root.toggleMarkdownChecklist(root.selectedId, taskControl.modelData.taskIndex)
-                                                    event.accepted = true
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                /** @brief Official Qt Quick rich-text action pattern for bold text. */
-                                Action {
-                                    id: boldAction
-                                    text: root.text("Bold", "Жирный")
-                                    enabled: editor.selectedText.length > 0
-                                    checkable: true
-                                    checked: editor.cursorSelection.font.bold
-                                    onTriggered: {
-                                        editor.cursorSelection.font.bold = checked
-                                        editor.forceActiveFocus()
-                                    }
-                                }
-
-                                /** @brief Official Qt Quick rich-text action pattern for italic text. */
-                                Action {
-                                    id: italicAction
-                                    text: root.text("Italic", "Курсив")
-                                    enabled: editor.selectedText.length > 0
-                                    checkable: true
-                                    checked: editor.cursorSelection.font.italic
-                                    onTriggered: {
-                                        editor.cursorSelection.font.italic = checked
-                                        editor.forceActiveFocus()
-                                    }
-                                }
-
-                                /** @brief Converts the selected visual paragraphs to a Markdown quote. */
-                                Action {
-                                    id: quoteAction
-                                    text: root.text("Quote", "Цитата")
-                                    enabled: editor.selectedText.length > 0
-                                    onTriggered: root.formatSelectionAsBlock(editor, "> ")
-                                }
-
-                                /** @brief Converts the selected visual paragraphs to Markdown tasks. */
-                                Action {
-                                    id: checklistAction
-                                    text: root.text("Checklist", "Чек-лист")
-                                    enabled: editor.selectedText.length > 0
-                                    onTriggered: root.formatSelectionAsBlock(editor, "- [ ] ")
-                                }
-
-                                /** @brief Compact formatting menu positioned beside the selection. */
-                                Rectangle {
-                                    id: formatBubble
-                                    readonly property rect anchorRect: editor.positionToRectangle(editor.selectionStart)
-                                    readonly property bool hasSelection: editor.selectedText.length > 0
-                                    visible: opacity > 0
-                                    enabled: hasSelection
-                                    opacity: hasSelection ? 1 : 0
-                                    scale: hasSelection ? 1 : 0.94
-                                    x: Math.max(6, Math.min(editorSurface.width - width - 6, anchorRect.x))
-                                    y: anchorRect.y >= height + 8 ? anchorRect.y - height - 8 : anchorRect.y + anchorRect.height + 8
-                                    z: 20
-                                    width: formatActions.implicitWidth + 8
-                                    height: 30
-                                    radius: 8
-                                    color: root.usesPlasmaAppearance
-                                        ? Qt.lighter(root.selectedNote
-                                            ? root.colour(root.selectedNote.color).paper : root.colour(0).paper, 1.04)
-                                        : "#f5f7f8"
-                                    border.width: 1
-                                    border.color: root.actionIconBorder
-
-                                    Behavior on opacity { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
-                                    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
-
-                                    Row {
-                                        id: formatActions
-                                        anchors.centerIn: parent
-                                        spacing: 2
-
-                                        NotyActionButton {
-                                            width: 24
-                                            height: 24
-                                            focusPolicy: Qt.NoFocus
-                                            action: boldAction
-                                            display: AbstractButton.IconOnly
-                                            glyph: "text-b"
-                                            glyphSize: root.iconSizeXs
-                                            glyphColor: root.actionIconColour
-                                            outlineColor: root.actionIconBorder
-                                            usePlasmaIconTheme: root.usePlasmaIconTheme
-                                        }
-                                        NotyActionButton {
-                                            width: 24
-                                            height: 24
-                                            focusPolicy: Qt.NoFocus
-                                            action: italicAction
-                                            display: AbstractButton.IconOnly
-                                            glyph: "text-italic"
-                                            glyphSize: root.iconSizeXs
-                                            glyphColor: root.actionIconColour
-                                            outlineColor: root.actionIconBorder
-                                            usePlasmaIconTheme: root.usePlasmaIconTheme
-                                        }
-                                        NotyActionButton {
-                                            width: 24
-                                            height: 24
-                                            focusPolicy: Qt.NoFocus
-                                            action: quoteAction
-                                            display: AbstractButton.IconOnly
-                                            glyph: "quotes"
-                                            glyphSize: root.iconSizeXs
-                                            glyphColor: root.actionIconColour
-                                            outlineColor: root.actionIconBorder
-                                            usePlasmaIconTheme: root.usePlasmaIconTheme
-                                            // Apply before the selection-owned bubble can lose its context.
-                                            onPressed: root.formatSelectionAsBlock(editor, "> ")
-                                        }
-                                        NotyActionButton {
-                                            width: 24
-                                            height: 24
-                                            focusPolicy: Qt.NoFocus
-                                            action: checklistAction
-                                            display: AbstractButton.IconOnly
-                                            glyph: "check-square"
-                                            glyphSize: root.iconSizeXs
-                                            glyphColor: root.actionIconColour
-                                            outlineColor: root.actionIconBorder
-                                            usePlasmaIconTheme: root.usePlasmaIconTheme
-                                            // Apply before the selection-owned bubble can lose its context.
-                                            onPressed: root.formatSelectionAsBlock(editor, "- [ ] ")
-                                        }
-                                    }
-                                }
+                                noteId: root.selectedId
+                                markdown: root.selectedNote ? root.selectedNote.body : ""
+                                paperColor: root.selectedNote ? root.colour(root.selectedNote.color).paper : root.colour(0).paper
+                                inkColor: root.selectedNote ? root.colour(root.selectedNote.color).ink : root.colour(0).ink
+                                selectionColor: root.usesPlasmaAppearance
+                                    ? Qt.rgba(root.systemHighlightColour.r, root.systemHighlightColour.g, root.systemHighlightColour.b, 0.28)
+                                    : Qt.rgba(0.16, 0.14, 0.11, 0.22)
+                                actionIconColor: root.actionIconColour
+                                actionIconOnDarkColor: root.actionIconOnDarkColour
+                                actionIconBorder: root.actionIconBorder
+                                noteFontFamily: root.noteFontFamily
+                                noteFontSize: root.noteFontSize
+                                ruled: root.selectedNote && root.selectedNote.ruled === true
+                                usePlasmaIconTheme: root.usePlasmaIconTheme
+                                placeholderText: root.text("Start writing…", "Начните писать…")
+                                boldText: root.text("Bold", "Жирный")
+                                italicText: root.text("Italic", "Курсив")
+                                quoteText: root.text("Quote", "Цитата")
+                                checklistText: root.text("Checklist", "Чек-лист")
+                                toggleTaskPrefix: root.text("Toggle task: ", "Переключить задачу: ")
+                                onMarkdownEdited: root.updateBody(root.selectedId, markdown)
+                                onChecklistToggled: root.toggleMarkdownChecklist(root.selectedId, taskIndex)
                             }
                             /** @brief Bottom palette and a single non-destructive archive action. */
                             RowLayout {
