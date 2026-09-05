@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "scripts": {
+    "docs:check": "node scripts/check-docs.mjs",
+    "test:site": "node scripts/test-site.mjs",
+    "capture:plasmoid": "bash scripts/capture-plasmoid-screenshot.sh",
+    "test:plasmoid:visual": "node scripts/test-plasmoid-ui-contract.mjs",
+    "test:plasmoid": "mkdir -p build/visual-snapshots && QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software /usr/lib/qt6/bin/qmltestrunner -input plasmoid/tests && npm run test:plasmoid:visual"
+  }
+}

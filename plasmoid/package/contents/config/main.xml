@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
+      http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
+  <kcfgfile name=""/>
+  <group name="General">
+    <entry name="notesJson" type="String">
+      <label>Serialized local notes for this widget instance.</label>
+      <default>[]</default>
+    </entry>
+    <entry name="language" type="String">
+      <label>Interface language code: en, ru, es, id, de, fr, pt, zh, ja or hi.</label>
+      <default>en</default>
+    </entry>
+    <entry name="fanDirection" type="String">
+      <label>Direction in which the fan opens from the screen edge.</label>
+      <default>rightToLeft</default>
+    </entry>
+    <entry name="stickEdge" type="String">
+      <label>Screen edge to which sticks are attached.</label>
+      <default>right</default>
+    </entry>
+    <entry name="showStickTitles" type="Bool">
+      <label>Show note titles on sticks.</label>
+      <default>true</default>
+    </entry>
+    <entry name="idleDisplayMode" type="String">
+      <label>Closed-state presentation: trafficLight, sticks or hidden.</label>
+      <default>trafficLight</default>
+    </entry>
+    <entry name="fixedNoteWidth" type="Int">
+      <label>Shared fixed width used by every note card.</label>
+      <default>640</default>
+    </entry>
+    <entry name="fixedNoteHeight" type="Int">
+      <label>Shared fixed height used by every note card.</label>
+      <default>480</default>
+    </entry>
+    <entry name="paletteJson" type="String">
+      <label>User-configured ordered paper palette. The first colour is mandatory.</label>
+      <default></default>
+    </entry>
+    <entry name="noteFontSize" type="Int">
+      <label>Base text size for note bodies, in pixels.</label>
+      <default>12</default>
+    </entry>
+    <entry name="noteFontFamily" type="String">
+      <label>Manual font family used only after disabling the system font option.</label>
+      <default>Noto Sans</default>
+    </entry>
+    <entry name="useSystemNoteFont" type="Bool">
+      <label>Use the current Plasma system font for note titles and bodies.</label>
+      <default>true</default>
+    </entry>
+    <entry name="appearanceMode" type="String">
+      <label>Visual system: noty, adaptive or plasma.</label>
+      <default>adaptive</default>
+    </entry>
+    <entry name="usePlasmaIconTheme" type="Bool">
+      <label>Experimental opt-in to resolve action icons from the active Plasma icon theme.</label>
+      <default>false</default>
+    </entry>
+    <entry name="archiveRetention" type="String">
+      <label>How long timestamped archived notes remain recoverable before permanent removal.</label>
+      <default>never</default>
+    </entry>
+  </group>
+</kcfg>

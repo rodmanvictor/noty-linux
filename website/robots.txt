@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://rodmanvictor.github.io/noty-plasma/sitemap.xml

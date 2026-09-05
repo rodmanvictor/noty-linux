@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Noty for Plasma is an independent KDE Plasma 6 edge-notes widget: local, colourful and designed to disappear until needed.">
+  <meta name="theme-color" content="#f4efdf">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Noty for Plasma — notes that respect the edge">
+  <meta property="og:description" content="A local-first KDE Plasma 6 sticky-notes widget with edge tabs, archive recovery and a coherent icon system.">
+  <meta property="og:url" content="https://rodmanvictor.github.io/noty-plasma/">
+  <link rel="canonical" href="https://rodmanvictor.github.io/noty-plasma/">
+  <link rel="icon" href="assets/noty-plasma.svg" type="image/svg+xml">
+  <title>Noty for Plasma</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --desk: #f4efdf;
+      --paper: #fffaf0;
+      --paper-strong: #f9e38a;
+      --ink: #173d5d;
+      --ink-soft: #526b7d;
+      --line: rgba(23, 61, 93, .17);
+      --blue: #56b7e8;
+      --deep-blue: #1d5f92;
+      --shadow: 0 22px 55px rgba(39, 63, 76, .17);
+      --shadow-soft: 0 12px 28px rgba(39, 63, 76, .11);
+      --serif: "Noto Serif", Iowan Old Style, Palatino, Georgia, serif;
+      --sans: "Noto Sans", Avenir Next, Segoe UI, sans-serif;
+    }
+
+    :root[data-theme="night"] {
+      color-scheme: dark;
+      --desk: #152635;
+      --paper: #203748;
+      --paper-strong: #e8c96c;
+      --ink: #f8f2df;
+      --ink-soft: #b7c9d1;
+      --line: rgba(248, 242, 223, .18);
+      --blue: #86d2f5;
+      --deep-blue: #d5effc;
+      --shadow: 0 22px 55px rgba(0, 0, 0, .33);
+      --shadow-soft: 0 12px 28px rgba(0, 0, 0, .24);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 78% 6%, color-mix(in srgb, var(--blue) 18%, transparent), transparent 23rem),
+        linear-gradient(112deg, transparent 0 63%, color-mix(in srgb, var(--paper-strong) 26%, transparent) 63.1% 63.4%, transparent 63.5%),
+        var(--desk);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.56;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, a { -webkit-tap-highlight-color: transparent; }
+    a { color: inherit; }
+    .shell { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+    .skip { position: fixed; left: 12px; top: -100px; z-index: 20; padding: 9px 14px; background: var(--ink); color: var(--desk); border-radius: 7px; }
+    .skip:focus { top: 12px; }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 19px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 750; letter-spacing: -.02em; }
+    .brand img { width: 34px; height: 34px; }
+    .brand small { display: block; font-size: .68rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); font-weight: 700; }
+    .nav { display: flex; align-items: center; gap: 6px; }
+    .nav a, .theme {
+      color: var(--ink-soft);
+      font: inherit;
+      font-size: .87rem;
+      font-weight: 680;
+      border: 0;
+      background: transparent;
+      border-radius: 7px;
+      padding: 8px 10px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .nav a:hover, .theme:hover { background: color-mix(in srgb, var(--ink) 8%, transparent); color: var(--ink); }
+    .nav a:focus-visible, .theme:focus-visible, .button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+
+    .hero {
+      min-height: min(780px, calc(100vh - 74px));
+      padding: clamp(64px, 10vw, 142px) 0 clamp(68px, 9vw, 116px);
+      display: grid;
+      grid-template-columns: minmax(0, .95fr) minmax(400px, 1.05fr);
+      gap: clamp(40px, 7vw, 100px);
+      align-items: center;
+    }
+    .eyebrow { margin: 0 0 16px; color: var(--deep-blue); font-size: .75rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1, h2 { font-family: var(--serif); letter-spacing: -.045em; text-wrap: balance; }
+    h1 { max-width: 10ch; font-size: clamp(3.1rem, 6vw, 5.8rem); line-height: .93; margin-bottom: 24px; }
+    h2 { font-size: clamp(2rem, 3.7vw, 3.3rem); line-height: 1; margin-bottom: 16px; }
+    h3 { font-size: 1.05rem; line-height: 1.2; letter-spacing: -.018em; margin-bottom: 8px; }
+    .lede { max-width: 48ch; color: var(--ink-soft); font-size: clamp(1.05rem, 1.6vw, 1.22rem); }
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; margin: 29px 0 17px; }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 45px;
+      padding: 11px 17px;
+      border: 1px solid var(--ink);
+      border-radius: 8px;
+      background: var(--ink);
+      color: var(--desk);
+      font-size: .91rem;
+      font-weight: 750;
+      text-decoration: none;
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .button:hover { transform: translateY(-2px); box-shadow: var(--shadow-soft); }
+    .button.secondary { color: var(--ink); background: transparent; border-color: var(--line); }
+    .microcopy { margin: 0; color: var(--ink-soft); font-size: .81rem; }
+
+    /* A CSS-only desk scene makes the edge concept legible before any screenshot loads. */
+    .desk-scene {
+      height: 490px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: color-mix(in srgb, var(--paper) 74%, var(--blue));
+      box-shadow: var(--shadow);
+      isolation: isolate;
+    }
+    .desk-scene::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent 0 31px, color-mix(in srgb, var(--blue) 13%, transparent) 31px 32px);
+      opacity: .76;
+    }
+    .scene-label { position: absolute; left: 25px; top: 23px; z-index: 3; color: var(--ink-soft); font-size: .72rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    .note-sheet {
+      position: absolute;
+      z-index: 2;
+      right: 24px;
+      top: 56px;
+      width: min(72%, 388px);
+      min-height: 350px;
+      padding: 30px 28px 25px 58px;
+      background: var(--paper-strong);
+      border-radius: 14px 0 0 14px;
+      box-shadow: -13px 17px 36px rgba(45, 65, 72, .18);
+    }
+    .note-sheet::before { content: ""; position: absolute; left: 34px; top: 0; bottom: 0; border-left: 2px dashed color-mix(in srgb, var(--ink) 24%, transparent); }
+    .note-sheet::after { content: ""; position: absolute; right: 0; bottom: 0; width: 28px; height: 28px; background: linear-gradient(135deg, transparent 49%, rgba(99, 80, 31, .13) 50%); }
+    .note-sheet h3 { margin: 0 0 12px; font-size: 1.08rem; }
+    .note-sheet p { max-width: 23ch; color: color-mix(in srgb, var(--ink) 79%, var(--paper-strong)); font-size: .93rem; }
+    .rule { height: 1px; margin: 23px 0; background: color-mix(in srgb, var(--ink) 15%, transparent); }
+    .tasks { display: grid; gap: 9px; color: color-mix(in srgb, var(--ink) 84%, var(--paper-strong)); font-size: .85rem; }
+    .task { display: flex; gap: 8px; align-items: center; }
+    .tick { display: grid; place-items: center; width: 17px; height: 17px; flex: 0 0 17px; border: 1.4px solid currentColor; border-radius: 3px; font-size: .75rem; }
+    .task.done { opacity: .62; text-decoration: line-through; }
+    .edge-tabs { position: absolute; z-index: 4; top: 70px; right: -9px; display: grid; gap: 8px; }
+    .edge-tab { width: 48px; height: 88px; display: grid; place-items: center; border: 1px solid rgba(23,61,93,.12); border-radius: 10px 0 0 10px; color: #173d5d; font-size: .63rem; font-weight: 850; letter-spacing: .07em; writing-mode: vertical-rl; transform: rotate(180deg); box-shadow: -5px 5px 12px rgba(42,58,65,.11); }
+    .edge-tab:nth-child(1) { background: #b4e8d0; transform: rotate(180deg) translateX(0); }
+    .edge-tab:nth-child(2) { background: #beddfa; transform: rotate(180deg) translateX(-8px); }
+    .edge-tab:nth-child(3) { background: #fac4d1; transform: rotate(180deg) translateX(-16px); }
+    .edge-tab:nth-child(4) { background: #d9c7fa; transform: rotate(180deg) translateX(-24px); }
+    .edge-plus { position: absolute; z-index: 5; right: 8px; bottom: 13px; width: 28px; height: 28px; display: grid; place-items: center; color: var(--ink); font-size: 1.8rem; font-weight: 300; line-height: 1; }
+    .scene-caption { position: absolute; z-index: 5; left: 25px; bottom: 21px; margin: 0; color: var(--ink-soft); font-family: var(--serif); font-size: 1.04rem; font-style: italic; }
+
+    main section { padding: clamp(70px, 10vw, 126px) 0; border-top: 1px solid var(--line); }
+    .section-head { max-width: 650px; margin-bottom: 42px; }
+    .section-head p:not(.eyebrow) { color: var(--ink-soft); font-size: 1.06rem; }
+    .states { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .state { padding: 23px; min-height: 236px; border: 1px solid var(--line); border-radius: 13px; background: color-mix(in srgb, var(--paper) 74%, transparent); }
+    .state-number { display: inline-grid; place-items: center; width: 30px; height: 30px; margin-bottom: 42px; border: 1px solid var(--line); border-radius: 50%; color: var(--deep-blue); font-family: var(--serif); }
+    .state p { color: var(--ink-soft); font-size: .94rem; }
+
+    .proof-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: clamp(20px, 3vw, 34px); align-items: start; }
+    .screenshot { margin: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: var(--paper); box-shadow: var(--shadow-soft); }
+    .screenshot img { display: block; width: 100%; height: auto; background: #252525; }
+    .screenshot figcaption { padding: 14px 17px 16px; color: var(--ink-soft); font-size: .81rem; }
+    .archive-shot { margin-top: 26px; }
+    .principles { display: grid; gap: 0; border-top: 1px solid var(--line); }
+    .principle { padding: 20px 0; border-bottom: 1px solid var(--line); }
+    .principle p { margin: 0; color: var(--ink-soft); font-size: .93rem; }
+    .principle strong { display: block; margin-bottom: 4px; }
+
+    .wide-shot { position: relative; overflow: hidden; min-height: 315px; padding: 0; border: 1px solid var(--line); border-radius: 17px; background: #252525; box-shadow: var(--shadow-soft); }
+    .wide-shot img { display: block; width: 100%; max-height: 490px; object-fit: cover; object-position: top; }
+    .wide-shot p { position: absolute; left: 20px; bottom: 17px; margin: 0; padding: 7px 10px; border-radius: 6px; background: rgba(21,38,53,.78); color: #fffaf0; font-size: .79rem; }
+
+    .icons-layout { display: grid; grid-template-columns: .8fr 1.2fr; gap: clamp(28px, 5vw, 78px); align-items: center; }
+    .icon-note { position: relative; min-height: 258px; padding: 29px; overflow: hidden; border-radius: 15px; background: var(--paper-strong); box-shadow: var(--shadow-soft); }
+    .icon-note::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(0deg, transparent 0 34px, rgba(23,61,93,.11) 34px 35px); }
+    .icon-note > * { position: relative; }
+    .icon-note p { max-width: 29ch; color: color-mix(in srgb, var(--ink) 83%, var(--paper-strong)); }
+    .icon-note .mark { position: absolute; right: 22px; bottom: 17px; color: color-mix(in srgb, var(--ink) 60%, var(--paper-strong)); font-family: var(--serif); font-size: 3rem; }
+
+    .install { display: grid; grid-template-columns: .9fr 1.1fr; gap: clamp(30px, 7vw, 100px); align-items: center; }
+    pre { margin: 0; padding: 22px; overflow: auto; border: 1px solid color-mix(in srgb, var(--blue) 33%, var(--line)); border-radius: 13px; background: #152635; color: #e9f3f9; box-shadow: var(--shadow-soft); font: .88rem/1.72 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    code .prompt { color: #86d2f5; }
+    .install p { color: var(--ink-soft); }
+    .install a { text-decoration-color: var(--blue); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+
+    .credit { padding-bottom: clamp(78px, 11vw, 136px) !important; }
+    .credit-card { padding: clamp(28px, 4vw, 48px); border: 1px solid var(--line); border-radius: 18px; background: linear-gradient(118deg, color-mix(in srgb, var(--paper) 87%, var(--blue)), var(--paper)); }
+    .credit-card h2 { max-width: 15ch; }
+    .credit-card p { max-width: 66ch; color: var(--ink-soft); }
+    .credit-card p + p { margin-top: 12px; }
+    .credit-card a { color: var(--ink); font-weight: 700; text-decoration-color: var(--blue); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+    footer { display: flex; justify-content: space-between; gap: 20px; padding: 26px 0 38px; border-top: 1px solid var(--line); color: var(--ink-soft); font-size: .79rem; }
+    footer p { margin: 0; }
+
+    .rise { opacity: 0; transform: translateY(16px); animation: rise .68s cubic-bezier(.2,.8,.2,1) forwards; }
+    .rise:nth-child(2) { animation-delay: .13s; }
+    @keyframes rise { to { opacity: 1; transform: translateY(0); } }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .rise { opacity: 1; transform: none; animation: none; } .button { transition: none; } }
+    @media (max-width: 880px) {
+      .hero, .proof-grid, .icons-layout, .install { grid-template-columns: 1fr; }
+      .hero { min-height: auto; }
+      .desk-scene { max-width: 650px; width: 100%; margin: 0 auto; }
+      .states { grid-template-columns: 1fr; }
+      .state { min-height: 0; }
+      .state-number { margin-bottom: 18px; }
+    }
+    @media (max-width: 560px) {
+      .shell { width: min(100% - 28px, 1180px); }
+      .topbar { padding: 13px 0; }
+      .nav a { display: none; }
+      .hero { padding-top: 56px; }
+      h1 { font-size: clamp(3rem, 16vw, 4.6rem); }
+      .desk-scene { height: 410px; }
+      .note-sheet { top: 53px; right: 17px; width: 78%; min-height: 302px; padding: 25px 17px 18px 46px; }
+      .note-sheet::before { left: 28px; }
+      .edge-tabs { right: -9px; top: 72px; gap: 5px; }
+      .edge-tab { width: 40px; height: 69px; font-size: .54rem; }
+      .scene-caption { left: 17px; bottom: 17px; font-size: .92rem; }
+      footer { display: block; }
+      footer p + p { margin-top: 6px; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="Noty for Plasma home">
+        <img src="assets/noty-plasma.svg" alt="">
+        <span>Noty <small>for Plasma</small></span>
+      </a>
+      <nav class="nav" aria-label="Site navigation">
+        <a href="#features">Features</a>
+        <a href="#install">Install</a>
+        <a href="https://github.com/rodmanvictor/noty-plasma">Source</a>
+        <button class="theme" id="theme-toggle" type="button" aria-pressed="false">Night</button>
+      </nav>
+    </header>
+
+    <main id="main">
+      <section class="hero" id="top" aria-labelledby="hero-title">
+        <div class="rise">
+          <p class="eyebrow">KDE Plasma 6 · local-first · MIT</p>
+          <h1 id="hero-title">Notes that respect the edge.</h1>
+          <p class="lede">Noty for Plasma rests quietly at the edge of your desktop. Reach it, choose a tab, and write in a full note — without turning your workspace into a wall of windows.</p>
+          <div class="actions">
+            <a class="button" href="#install">Install the widget</a>
+            <a class="button secondary" href="https://github.com/rodmanvictor/noty-plasma">View on GitHub</a>
+          </div>
+          <p class="microcopy">Free software. Your notes remain in your local Plasma configuration.</p>
+        </div>
+        <div class="desk-scene rise" aria-label="Illustration of a Noty note pulled out from its edge tabs">
+          <p class="scene-label">The edge is the interface</p>
+          <article class="note-sheet">
+            <h3>Release the thought</h3>
+            <p>Keep a tiny task, a fragment of a plan, or a note you will need when the next window closes.</p>
+            <div class="rule"></div>
+            <div class="tasks" aria-label="Example checklist">
+              <span class="task done"><i class="tick">✓</i>choose paper</span>
+              <span class="task"><i class="tick"></i>finish the thought</span>
+              <span class="task"><i class="tick"></i>archive when done</span>
+            </div>
+          </article>
+          <div class="edge-tabs" aria-hidden="true">
+            <span class="edge-tab">TODAY</span><span class="edge-tab">IDEAS</span><span class="edge-tab">READ</span><span class="edge-tab">LATER</span>
+          </div>
+          <span class="edge-plus" aria-hidden="true">+</span>
+          <p class="scene-caption">A small place for the things you should not lose.</p>
+        </div>
+      </section>
+
+      <section id="features" aria-labelledby="states-title">
+        <div class="section-head">
+          <p class="eyebrow">One edge, three useful states</p>
+          <h2 id="states-title">Quiet until you need it.</h2>
+          <p>Noty is designed around the empty desktop: it has a minimal resting state, a readable fan, and a note that opens in place.</p>
+        </div>
+        <div class="states">
+          <article class="state"><span class="state-number">01</span><h3>At rest</h3><p>A tiny colour indicator uses the desktop edge instead of a dock icon or a permanent floating window.</p></article>
+          <article class="state"><span class="state-number">02</span><h3>Reach the tabs</h3><p>Hovering reveals every active note. Tabs distribute across the available edge and overlap gracefully when the deck grows.</p></article>
+          <article class="state"><span class="state-number">03</span><h3>Pull out a note</h3><p>The chosen card opens at its own tab. The other tabs retain their position, order and orientation so switching stays spatially predictable.</p></article>
+        </div>
+      </section>
+
+      <section aria-labelledby="proof-title">
+        <div class="section-head">
+          <p class="eyebrow">Designed against real components</p>
+          <h2 id="proof-title">Paper, archive, settings — checked as rendered.</h2>
+          <p>The screenshots below come from the QML test harness. They cover actual components rather than polished mockups.</p>
+        </div>
+        <div class="proof-grid">
+          <figure class="screenshot">
+            <img src="assets/screenshots/pastel-card-contrast.png" alt="A readable blue pastel Noty card with a title spine and colour palette.">
+            <figcaption>Pastel card: paired ink remains readable on coloured paper.</figcaption>
+          </figure>
+          <div class="principles">
+            <div class="principle"><strong>Adaptive by default</strong><p>Pastel paper keeps its identity while typography and interaction affordances can follow the current Plasma theme.</p></div>
+            <div class="principle"><strong>Archive means recoverable</strong><p>Archiving removes a note from the deck without deleting it. Retention can be permanent or time-limited.</p></div>
+            <div class="principle"><strong>Make the palette yours</strong><p>Add colours, reorder them, and remove optional entries. The first paper remains a safe default for affected notes.</p></div>
+          </div>
+        </div>
+        <figure class="screenshot archive-shot">
+          <img src="assets/screenshots/archive-confirmation.png" alt="A warm archive confirmation dialog with cancel and clear archive actions.">
+          <figcaption>The archive confirmation is a real QML component — destructive actions require an explicit decision.</figcaption>
+        </figure>
+      </section>
+
+      <section aria-labelledby="theme-title">
+        <div class="section-head">
+          <p class="eyebrow">Native enough to belong</p>
+          <h2 id="theme-title">Follow Plasma without disappearing into it.</h2>
+          <p>Choose a complete Noty look, Adaptive integration, or a more Plasma-led appearance. The paper stays colourful and contrast is protected in all three modes.</p>
+        </div>
+        <figure class="wide-shot">
+          <img src="assets/screenshots/appearance-settings.png" alt="Noty configuration page showing language, typography, appearance, note size, archive and colour palette settings.">
+          <p>Settings: language, system font, appearance, edge, fixed note size, archive and palette.</p>
+        </figure>
+      </section>
+
+      <section aria-labelledby="icons-title">
+        <div class="icons-layout">
+          <div class="icon-note">
+            <p class="eyebrow">One icon language</p>
+            <h2 id="icons-title">Every action speaks in the same stroke.</h2>
+            <p>Noty ships Phosphor Icons in the Regular weight for every product action. The optional Plasma icon-theme switch is there for experimentation, never as a mixed default.</p>
+            <span class="mark" aria-hidden="true">↗</span>
+          </div>
+          <figure class="screenshot">
+            <img src="assets/screenshots/icon-system.png" alt="The complete Phosphor Regular icon set used by Noty, including add, archive, restore, delete, task and formatting controls.">
+            <figcaption>Phosphor Icons Regular: 16 px actions, with a deliberate 22 px primary add glyph.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section id="install" aria-labelledby="install-title">
+        <div class="install">
+          <div>
+            <p class="eyebrow">Start from source</p>
+            <h2 id="install-title">A widget, not another app launcher.</h2>
+            <p>Install the package, then add <strong>Noty</strong> from Plasma’s widget picker and place it on an edge. The source is intentionally small and inspectable.</p>
+            <p><a href="https://github.com/rodmanvictor/noty-plasma#readme">Read build notes and run the test suite →</a></p>
+          </div>
+          <pre aria-label="Plasma widget installation commands"><code><span class="prompt">$</span> git clone https://github.com/rodmanvictor/noty-plasma.git
+<span class="prompt">$</span> cd noty-plasma
+<span class="prompt">$</span> kpackagetool6 --type Plasma/Applet \
+    --upgrade plasmoid/package</code></pre>
+        </div>
+      </section>
+
+      <section class="credit" aria-labelledby="credit-title">
+        <div class="credit-card">
+          <p class="eyebrow">Honest provenance</p>
+          <h2 id="credit-title">Independent implementation, visible lineage.</h2>
+          <p>Noty for Plasma is an independent KDE Plasma implementation inspired by the interaction idea behind <a href="https://github.com/aimen08/noty">Noty for macOS by Aymen Hamza</a>: notes that live at the edge instead of competing with your workspace.</p>
+          <p>This project is a separate Qt 6 / QML / C++ implementation for KDE Plasma. It is not the upstream macOS codebase, is not an official release, and is not affiliated with the original author. See the repository <a href="https://github.com/rodmanvictor/noty-plasma/blob/main/NOTICE">NOTICE</a> and MIT licenses for the exact attribution.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Noty for Plasma · KDE Plasma 6 · MIT</p>
+      <p><a href="https://github.com/rodmanvictor/noty-plasma">Source</a> · <a href="https://github.com/aimen08/noty">macOS inspiration</a></p>
+    </footer>
+  </div>
+  <script>
+    /**
+     * Persists the reader-selected display theme without affecting Plasma or note settings.
+     * @returns {void}
+     * @sideeffect Updates the document attribute and browser-local preference.
+     */
+    function toggleTheme() {
+      const root = document.documentElement;
+      const nextTheme = root.dataset.theme === "night" ? "day" : "night";
+      root.dataset.theme = nextTheme;
+      localStorage.setItem("noty-plasma-site-theme", nextTheme);
+      const toggle = document.querySelector("#theme-toggle");
+      toggle.textContent = nextTheme === "night" ? "Day" : "Night";
+      toggle.setAttribute("aria-pressed", String(nextTheme === "night"));
+    }
+
+    const storedTheme = localStorage.getItem("noty-plasma-site-theme");
+    if (storedTheme === "night") {
+      document.documentElement.dataset.theme = storedTheme;
+      document.querySelector("#theme-toggle").textContent = "Day";
+      document.querySelector("#theme-toggle").setAttribute("aria-pressed", "true");
+    }
+    document.querySelector("#theme-toggle").addEventListener("click", toggleTheme);
+  </script>
+</body>
+</html>

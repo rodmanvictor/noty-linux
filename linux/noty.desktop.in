@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Noty
+Comment=Sticky notes at the edge of your screen
+Exec=@CMAKE_INSTALL_FULL_BINDIR@/noty
+Icon=noty
+Terminal=false
+Categories=Utility;Office;
+Keywords=notes;sticky;todo;
+StartupNotify=false
