@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://rodmanvictor.github.io/noty-plasma/sitemap.xml
+Sitemap: https://rodmanvictor.github.io/noty-linux/sitemap.xml

@@ -1,0 +1,20 @@
+{
+  "northStar": "Quiet Desktop Field Record",
+  "breakpoints": {
+    "singleColumn": "900px",
+    "mobileEvidenceFirst": "620px"
+  },
+  "elevation": {
+    "capture": "0 28px 80px rgba(0,0,0,.34)"
+  },
+  "motion": {
+    "button": "transform 0.18s ease",
+    "autoplay": "One muted hero video only; Pause/Play control and prefers-reduced-motion support are required."
+  },
+  "guardrails": [
+    "Use real English-language product captures, never reconstructed mockups.",
+    "Do not expose personal neighbouring note titles in public media.",
+    "Use Signal Sun only for decisive actions and the brand mark.",
+    "Keep claims limited to the shipped KDE Plasma integration."
+  ]
+}

@@ -1,12 +1,13 @@
-# Noty for Plasma
+# Noty Linux
 
-**Sticky notes that stay on the edge of your KDE Plasma desktop.**
+**Local-first edge notes for Linux desktops. The first shipping integration targets KDE Plasma 6.**
 
-Noty for Plasma is a free, local-first Plasma 6 widget. It sleeps as a small
-edge indicator, fans into coloured tabs when you reach it, and opens a note
-without scattering windows over the desktop.
+Noty Linux is a free, local-first project for desktop notes that stay nearby
+without taking over the screen. The Plasma widget sleeps as a small edge
+indicator, fans into coloured tabs when you reach it, and opens a note without
+scattering windows over the desktop.
 
-> Independent KDE Plasma implementation inspired by
+> Independent Linux desktop implementation inspired by
 > [Noty for macOS](https://github.com/aimen08/noty) by Aymen Hamza.
 > It is not affiliated with or endorsed by the original project.
 
@@ -27,8 +28,8 @@ without scattering windows over the desktop.
 ## Install the Plasma widget
 
 ```bash
-git clone https://github.com/rodmanvictor/noty-plasma.git
-cd noty-plasma
+git clone https://github.com/rodmanvictor/noty-linux.git
+cd noty-linux
 kpackagetool6 --type Plasma/Applet --upgrade plasmoid/package
 ```
 

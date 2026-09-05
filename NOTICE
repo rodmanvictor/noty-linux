@@ -1,8 +1,9 @@
-# Noty for Plasma — attribution notice
+# Noty Linux — attribution notice
 
-Noty for Plasma is an independent KDE Plasma implementation. Its interaction
+Noty Linux is an independent Linux desktop implementation. Its interaction
 idea and early visual references were inspired by [Noty for macOS by Aymen
-Hamza](https://github.com/aimen08/noty), which is MIT-licensed.
+Hamza](https://github.com/aimen08/noty), which is MIT-licensed. KDE Plasma is
+the first shipping desktop integration.
 
 This repository does not contain the upstream Swift, SwiftUI or AppKit source,
 nor does it present itself as an official release or endorsement from the
@@ -11,3 +12,7 @@ upstream author. The KDE implementation is written in Qt 6, QML and C++.
 The bundled action icons are [Phosphor Icons](https://phosphoricons.com/) in
 the Regular weight. Their MIT license is included in
 [`licenses/PHOSPHOR-MIT.txt`](licenses/PHOSPHOR-MIT.txt).
+
+The landing page self-hosts Noto Serif under the SIL Open Font License 1.1.
+Its complete license text is included in
+[`licenses/NOTO-OFL.txt`](licenses/NOTO-OFL.txt).

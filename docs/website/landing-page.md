@@ -1,14 +1,21 @@
-# Лендинг Noty for Plasma
+# Noty Linux landing page
 
-Статический сайт находится в `website/`. Он публикуется workflow
-`.github/workflows/pages.yml` после push в `main` и не требует Vercel, сборщика
-или серверного кода. URL проекта: `https://rodmanvictor.github.io/noty-plasma/`.
+The static website lives in `website/`. The `.github/workflows/pages.yml`
+workflow publishes it after a push to `main`; it requires neither Vercel, a
+build system, nor server-side code. The public URL is
+`https://rodmanvictor.github.io/noty-linux/`.
 
-Страница показывает только обезличенные PNG, созданные QML-тестами: открытую
-пастельную карточку, подтверждение очистки архива, настройки и набор иконок.
-Снимки рабочего стола или пользовательских заметок в сайт не добавляются.
+The page uses approved real captures from the running KDE Plasma widget:
+`assets/screenshots/live-note-editor.png`,
+`assets/screenshots/live-note-colour.png`, and
+`assets/demo/noty-workflow.mp4`. The public captures crop the real interaction
+to its English note card, so neighbouring personal note titles never become
+website content. `assets/demo/noty-workflow.gif` is the derived, loopable
+version for contexts without video playback; it is downloadable rather than
+autoplayed a second time on the page. Do not replace these with a CSS mockup or
+imply that the current Plasma build also ships for GNOME or another desktop.
 
-`npm run test:site` проверяет title, установочную команду, все локальные assets
-и честную ссылку на upstream. Страница обязана сообщать, что это независимая
-KDE-реализация, вдохновлённая Noty for macOS, а не официальный продукт автора
-оригинала.
+`npm run test:site` validates the title, installation command, all local assets,
+and the honest upstream credit. The page must call this an independent Linux
+desktop implementation inspired by Noty for macOS, not an official upstream
+product.

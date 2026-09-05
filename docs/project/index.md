@@ -1,3 +1,3 @@
-# Проект
+# Project
 
-- [Provenance](provenance.md): независимая реализация, атрибуция оригинальному Noty и правила бренда.
+- [Provenance](provenance.md): independent implementation, attribution to the original Noty, and brand rules.

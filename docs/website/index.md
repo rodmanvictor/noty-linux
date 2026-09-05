@@ -1,3 +1,3 @@
-# Публичный сайт
+# Public website
 
-- [Landing page](landing-page.md): состав статической страницы, обязательная атрибуция и GitHub Pages deployment.
+- [Landing page](landing-page.md): static page contents, required attribution, real product captures, and GitHub Pages deployment.
