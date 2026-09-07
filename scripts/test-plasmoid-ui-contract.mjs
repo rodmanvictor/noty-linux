@@ -76,7 +76,7 @@ assertContract(/preferredRepresentation: compactRepresentation[\s\S]*?hideOnWind
 assertContract(/hideOnWindowDeactivate: LayoutContract\.hidesDialogOnDeactivate\(root\.idleDisplayMode\)[\s\S]*?onActiveChanged:[\s\S]*?!active && root\.keepSticksVisible && root\.selectedId !== ""[\s\S]*?root\.closeNoteCard\(\)/, "persistent sticks must not reopen on desktop focus changes, while an open card still collapses");
 assert.doesNotMatch(mainQml, /persistentFanTimer/, "persistent sticks must never use a close-and-reopen timer that steals desktop menus");
 assertContract(/id: hiddenFanCloseTimer[\s\S]*?root\.idleDisplayMode === "hidden"[\s\S]*?!root\.compactPointerInside[\s\S]*?!root\.fanPointerInside[\s\S]*?noteDialog\.visible = false/, "hidden mode must close after the pointer leaves both the edge trigger and fan");
-assertContract(/onEntered:[\s\S]*?root\.compactPointerInside = true[\s\S]*?hiddenFanCloseTimer\.stop\(\)[\s\S]*?onExited:[\s\S]*?root\.compactPointerInside = false[\s\S]*?root\.scheduleHiddenFanClose\(\)/, "the transparent edge trigger must own a bounded hover lifetime");
+assertContract(/onPointerEntered:[\s\S]*?root\.compactPointerInside = true[\s\S]*?hiddenFanCloseTimer\.stop\(\)[\s\S]*?onPointerExited:[\s\S]*?root\.compactPointerInside = false[\s\S]*?root\.scheduleHiddenFanClose\(\)/, "the transparent edge trigger must own a bounded hover lifetime");
 assertContract(/visible: root\.showTrafficLight[\s\S]*?opacity: noteDialog\.visible \? 0 : 0\.94/, "traffic light must fade while the fan is open");
 assertContract(/color: root\.stickColour\(modelData\.color\)/, "traffic-light marks and note sticks must share the same colour function");
 assertContract(/readonly property var palette: PaletteContract\.fromJson\(Plasmoid\.configuration\.paletteJson\)[\s\S]*?function reconcilePaletteChange\(\)[\s\S]*?PaletteContract\.removedIndex\(appliedPalette, palette\)[\s\S]*?NoteStore\.withDeletedPaletteColour\(notes, removedIndex\)/, "palette settings must drive the deck and remap notes whose colour was deleted");
@@ -181,3 +181,8 @@ assert.match(plasmaIconNames, /"plus": "list-add"/, "the bare new-note plus must
 assert.ok((mainQml.match(/usePlasmaIconTheme: root\.usePlasmaIconTheme/g) || []).length >= 11, "every direct card, archive and editor action must receive the Plasma icon-theme opt-in");
 
 console.log("Plasmoid visual and editing contracts are intact.");
+
+assertContract(/HoverOpenArea[\s\S]*?deckVisible: noteDialog\.visible[\s\S]*?onOpenRequested: activateWindow => root\.showNotes\(activateWindow\)[\s\S]*?onContextualActionsAboutToShow\(\)[\s\S]*?compactTrigger\.suppressHover\(\)/, "compact hover must preserve activation intent and cancel before native menus open");
+
+assertContract(/DeckContextMenu[\s\S]*?Plasmoid\.internalAction\("configure"\)[\s\S]*?Plasmoid\.internalAction\("remove"\)[\s\S]*?acceptedButtons: Qt\.RightButton[\s\S]*?deckContextMenu\.popupAt\(fullView, mouse\.x, mouse\.y\)/, "standalone fan must expose real widget actions on right click");
+assertContract(/hideOnWindowDeactivate: LayoutContract\.hidesDialogOnDeactivate\(root\.idleDisplayMode\)\s*&& !root\.deckContextMenuVisible/, "deck must survive focus handoff to its context menu");

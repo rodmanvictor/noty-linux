@@ -41,6 +41,8 @@ PlasmoidItem {
     /** @brief Prevents palette reconciliation before stored notes have loaded. */
     property bool paletteReady: false
     property var notes: []
+    /** @brief Keeps the deck alive while its widget-action popup owns focus. */
+    property bool deckContextMenuVisible: false
     property string selectedId: ""
     /** @brief Reference to the nested visual Markdown editor while a note card exists. */
     property var markdownEditor: null
@@ -602,6 +604,8 @@ PlasmoidItem {
      * Desktop applets use the Planar form factor, where `Plasmoid.expanded`
      * does not create a popup. A PlasmaCore.Dialog is therefore the explicit
      * desktop interaction surface.
+     * @param {bool} activateWindow False for hover previews; otherwise requests focus.
+     * @returns {void} Shows the dialog and optionally requests activation.
      */
     function showNotes(activateWindow) {
         noteDialog.visible = true
@@ -700,6 +704,7 @@ PlasmoidItem {
         onTriggered: {
             if (root.idleDisplayMode === "hidden"
                     && root.selectedId === ""
+                    && !root.deckContextMenuVisible
                     && !root.compactPointerInside
                     && !root.fanPointerInside) {
                 noteDialog.visible = false
@@ -776,27 +781,32 @@ PlasmoidItem {
                 }
             }
         }
-        MouseArea {
+        HoverOpenArea {
+            id: compactTrigger
             /**
              * The grid cell is deliberately larger than the visible strip.
              * Keeping the whole cell interactive makes the edge trigger
              * practical to hit while keeping the desktop visually clean.
             */
             anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onEntered: {
+            deckVisible: noteDialog.visible
+            onPointerEntered: {
                 root.compactPointerInside = true
                 hiddenFanCloseTimer.stop()
-                if (!noteDialog.visible) {
-                    root.showNotes()
-                }
             }
-            onExited: {
+            onPointerExited: {
                 root.compactPointerInside = false
                 root.scheduleHiddenFanClose()
             }
-            onClicked: root.showNotes()
+            onOpenRequested: activateWindow => root.showNotes(activateWindow)
+
+            // Plasma may consume the right press before it reaches the trigger.
+            Connections {
+                target: root
+                function onContextualActionsAboutToShow() {
+                    compactTrigger.suppressHover()
+                }
+            }
         }
     }
 
@@ -859,6 +869,30 @@ PlasmoidItem {
                 : (root.selectedId === "" ? fanHeight : Math.max(fanHeight, cardHeight + (root.horizontalSticks ? cardStickDepth : 0)))
             width: implicitWidth
             height: implicitHeight
+
+            DeckContextMenu {
+                id: deckContextMenu
+                widgetActions: [Plasmoid.internalAction("configure"), Plasmoid.internalAction("remove")]
+                    .filter(action => action !== null)
+                onAboutToShow: root.deckContextMenuVisible = true
+                onClosed: {
+                    root.deckContextMenuVisible = false
+                    root.scheduleHiddenFanClose()
+                }
+            }
+
+            // The fan is a separate window: unhandled right clicks cannot reach Plasma.
+            MouseArea {
+                anchors.fill: parent
+                z: 10000
+                enabled: root.selectedId === "" && !root.archiveDrawerOpen
+                acceptedButtons: Qt.RightButton
+                onPressed: mouse => {
+                    root.prepareContextualActions()
+                    // Limit the compositor anchor to the actual click, not the whole fan.
+                    deckContextMenu.popupAt(fullView, mouse.x, mouse.y)
+                }
+            }
 
             HoverHandler {
                 acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
@@ -2127,6 +2161,7 @@ PlasmoidItem {
         backgroundHints: PlasmaCore.Dialog.NoBackground
         color: Qt.rgba(0, 0, 0, 0)
         hideOnWindowDeactivate: LayoutContract.hidesDialogOnDeactivate(root.idleDisplayMode)
+            && !root.deckContextMenuVisible
         visible: false
         onWidthChanged: root.scheduleDialogEdgeAlignment()
         onHeightChanged: root.scheduleDialogEdgeAlignment()
